@@ -55,3 +55,5 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
 ProgressBar.displayName = 'ProgressBar'
 
 export { ProgressBar, variantColors }
+
+export default ProgressBar

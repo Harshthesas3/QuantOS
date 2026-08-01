@@ -7,6 +7,7 @@ import Resources from '../pages/Resources'
 import Projects from '../pages/Projects'
 import Notes from '../pages/Notes'
 import TopicDetails from '../pages/TopicDetails'
+import StudySession from '../pages/StudySession'
 import DailyPlanner from '../pages/DailyPlanner'
 import Analytics from '../pages/Analytics'
 import Settings from '../pages/Settings'
@@ -96,6 +97,14 @@ export default function Routes() {
         element={
           <ProtectedRoute>
             <TopicDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/study/:topicId?"
+        element={
+          <ProtectedRoute>
+            <StudySession />
           </ProtectedRoute>
         }
       />

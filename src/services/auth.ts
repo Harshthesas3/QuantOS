@@ -1,4 +1,23 @@
-﻿import argon2 from 'argon2-browser/dist/argon2-bundled.min.js'
+﻿import argon2 from 'argon2-browser'
+import argon2WasmUrl from 'argon2-browser/dist/argon2.wasm?url'
+
+declare global {
+  interface Window {
+    loadArgon2WasmBinary?: () => Promise<Uint8Array>
+  }
+}
+
+// argon2-browser's wasm loader falls into a Vite-pre-bundled code path that
+// calls atob() on a module object instead of a base64 string, which throws
+// "Failed to execute 'atob' on 'Window'". The library checks
+// `global.loadArgon2WasmBinary` first, so provide the real wasm binary from
+// the bundled asset instead (same pattern used for sql.js).
+if (typeof window !== 'undefined' && !window.loadArgon2WasmBinary) {
+  window.loadArgon2WasmBinary = async () => {
+    const response = await fetch(argon2WasmUrl)
+    return new Uint8Array(await response.arrayBuffer())
+  }
+}
 
 const MEMORY_COST = 19456
 const TIME_COST = 2

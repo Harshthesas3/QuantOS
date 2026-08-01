@@ -1,18 +1,31 @@
 import { Link } from 'react-router-dom'
-import { Cpu, Clock, Activity, BookOpen, ArrowRight, Flame, Target, TrendingUp, Calendar, CheckCircle } from 'lucide-react'
+import { Cpu, Clock, Activity, BookOpen, ArrowRight, Flame, Target, TrendingUp, Calendar, Timer, Quote } from 'lucide-react'
+import { useMemo } from 'react'
 import { useCurriculumStore } from '../stores/curriculumStore'
 import { useSpacedRepetitionStore } from '../stores/spacedRepetitionStore'
-import { usePlannerStore } from '../stores/plannerStore'
+import { useStudySessionStore } from '../stores/studySessionStore'
 import { useUserStore } from '../stores/userStore'
+import {
+  getTodayStudyMinutes,
+  getWeekStudyMinutes,
+  getStudyStreak,
+  getLatestSession,
+  groupSessionMinutesByDate,
+  getSessionDateKey,
+  formatSessionMinutes,
+} from '../lib/studyMetrics'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { ProgressBar } from '../components/ui/progress'
+import quotes from '../data/marcusAureliusQuotes.json'
+
+type QuoteEntry = { book: string; chapter: string; text: string }
 
 export default function Dashboard() {
   const { nodes, getCriticalPath } = useCurriculumStore()
   const { getDueCardsCount } = useSpacedRepetitionStore()
-  const { getTasksForDate, toggleTaskCompleted, logs, tasks } = usePlannerStore()
+  const { sessions } = useStudySessionStore()
   const { user } = useUserStore()
 
   const criticalPath = getCriticalPath().slice(0, 3)
@@ -28,43 +41,27 @@ export default function Dashboard() {
     .reduce((acc, curr) => acc + curr.estimatedHours, 0)
   const progressPercent = Math.round((completedHours / totalHours) * 100) || 0
 
-  const todayStr = new Date().toISOString().split('T')[0]
-  const todayTasks = getTasksForDate(todayStr)
-  const todayMinutes = todayTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
+  const sessionList = useMemo(() => Object.values(sessions), [sessions])
+  const todayMinutes = getTodayStudyMinutes(sessionList)
   const todayHours = (todayMinutes / 60).toFixed(1)
+  const weekMinutes = getWeekStudyMinutes(sessionList)
+  const weekHours = (weekMinutes / 60).toFixed(1)
+  const studyStreak = getStudyStreak(sessionList)
+  const lastSession = getLatestSession(sessionList)
 
-  const studyStreak = (() => {
-    const activityDates = new Set<string>(Object.keys(logs))
-    Object.values(tasks).forEach((task) => {
-      if (task.actualMinutes > 0 || task.completed) {
-        activityDates.add(task.date)
-      }
-    })
+  const activeDays = new Set(sessionList.map(getSessionDateKey)).size
 
-    if (activityDates.size === 0) return 0
-
-    let streak = 0
-    const cursor = new Date()
-    while (true) {
-      const dateStr = cursor.toISOString().split('T')[0]
-      if (!activityDates.has(dateStr)) break
-      streak += 1
-      cursor.setDate(cursor.getDate() - 1)
-    }
-
-    return streak
-  })()
-
-  const weeklyHours = Array.from({ length: 7 }, (_, i) => {
+  const weeklyData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date()
-    d.setDate(d.getDate() - i)
-    return d.toISOString().split('T')[0]
-  }).reverse()
-
-  const weeklyData = weeklyHours.map(date => {
-    const dayTasks = getTasksForDate(date)
-    const minutes = dayTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
-    return { date: date.slice(5), hours: parseFloat((minutes / 60).toFixed(1)) }
+    d.setDate(d.getDate() - (6 - i))
+    const dateStr = d.toISOString().split('T')[0]
+    const minutes = sessionList.reduce((acc, s) => {
+      if (getSessionDateKey(s) === dateStr) {
+        return acc + (s.elapsedSeconds / 60)
+      }
+      return acc
+    }, 0)
+    return { date: dateStr.slice(5), hours: parseFloat((minutes / 60).toFixed(1)) }
   })
 
   const weeklyTotalHours = weeklyData.reduce((acc, d) => acc + d.hours, 0)
@@ -85,6 +82,9 @@ export default function Dashboard() {
   const currentPhase = phases.find(p => p.completed < p.total) || phases[phases.length - 1]
   const currentNode = focusNodes[0] || totalNodes.find(n => n.status === 'UNLOCKED')
 
+  // Heatmap from study-session minutes.
+  const sessionMinutesByDate = useMemo(() => groupSessionMinutesByDate(sessionList), [sessionList])
+
   const getHeatmapColor = (level: number) => {
     switch (level) {
       case 0: return 'bg-[#18181B]'
@@ -97,8 +97,7 @@ export default function Dashboard() {
   }
 
   const getHeatmapIntensity = (dateStr: string) => {
-    const dayTasks = getTasksForDate(dateStr)
-    const minutes = dayTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
+    const minutes = sessionMinutesByDate[dateStr] ?? 0
     const hours = minutes / 60
     if (hours === 0) return 0
     if (hours < 0.5) return 1
@@ -116,9 +115,27 @@ export default function Dashboard() {
     return d.toISOString().split('T')[0]
   }
 
-  const recentActivity = todayTasks
-    .sort((a, b) => b.actualMinutes - a.actualMinutes)
+  // Recent activity from latest sessions (finished or in-progress).
+  const recentSessions = [...sessionList]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, 5)
+
+  const quote = useMemo(() => {
+    const source = quotes as QuoteEntry[]
+    const seed = new Date().toISOString().slice(0, 10)
+    let hash = 0
+    for (const char of seed) {
+      hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+    }
+    return source[hash % source.length]
+  }, [])
+
+  const formatLastSession = (session: typeof lastSession) => {
+    if (!session) return 'No sessions yet'
+    const mins = formatSessionMinutes(session)
+    const date = new Date(session.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    return `${mins} · ${date}`
+  }
 
   return (
     <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
@@ -130,6 +147,11 @@ export default function Dashboard() {
           </h1>
           <p className="text-sm text-[#A1A1AA] mt-1">
             {user ? `Welcome back, ${user.username}` : 'Mastering quantitative finance research'}
+          </p>
+          <p className="text-sm text-[#A1A1AA] mt-2 italic leading-6 max-w-2xl">
+            <Quote className="w-3.5 h-3.5 inline text-[#38BDF8] mr-1" />
+            “{quote.text}”
+            <span className="text-xs text-[#71717A] not-italic ml-2">— Meditations {quote.book}.{quote.chapter}</span>
           </p>
         </div>
         <Button asChild>
@@ -229,32 +251,37 @@ export default function Dashboard() {
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
               <Calendar className="w-5 h-5 text-[#38BDF8]" /> Recent Activity
             </CardTitle>
+            <CardDescription>Your latest study sessions</CardDescription>
           </CardHeader>
           <CardContent>
-            {recentActivity.length > 0 ? (
+            {recentSessions.length > 0 ? (
               <ul className="space-y-3">
-                {recentActivity.map((task) => (
-                  <li key={task.id} className="flex items-center justify-between p-3 bg-[#18181B] border border-[#27272A] rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => toggleTaskCompleted(task.id)}
-                        className={`w-5 h-5 border rounded flex items-center justify-center transition-colors ${
-                          task.completed ? 'bg-green-600 border-green-600 text-white' : 'border-[#27272A]'
-                        }`}
-                      >
-                        {task.completed && <CheckCircle className="w-3.5 h-3.5 fill-white" />}
-                      </button>
-                      <div>
-                        <span className={`text-sm ${task.completed ? 'line-through text-[#A1A1AA]' : 'text-white'}`}>{task.title}</span>
-                        <span className="text-xs text-[#A1A1AA] ml-2 font-mono">{task.actualMinutes}m</span>
+                {recentSessions.map((session) => {
+                  const node = nodes[session.topicId]
+                  const title = node ? `${node.id}: ${node.title}` : session.topicId
+                  const mins = formatSessionMinutes(session)
+                  const when = new Date(session.updatedAt).toLocaleString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                  return (
+                    <li key={session.id} className="flex items-center justify-between p-3 bg-[#18181B] border border-[#27272A] rounded-lg">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${session.status === 'finished' ? 'bg-green-400' : session.status === 'active' ? 'bg-[#38BDF8] animate-pulse' : 'bg-[#71717A]'}`} />
+                        <div className="min-w-0">
+                          <div className="text-sm text-white truncate">{title}</div>
+                          <div className="text-xs text-[#A1A1AA]">{session.phaseId.replace('PHASE_', 'Phase ')} · {when}</div>
+                        </div>
                       </div>
-                    </div>
-                    <Link to="/planner" className="text-xs text-[#38BDF8] hover:underline">View</Link>
-                  </li>
-                ))}
+                      <span className="text-xs font-mono text-[#A1A1AA] ml-3 flex-shrink-0">{mins}</span>
+                    </li>
+                  )
+                })}
               </ul>
             ) : (
-              <div className="text-sm text-[#A1A1AA] py-4 text-center">No activity today. Add a task to get started!</div>
+              <div className="text-sm text-[#A1A1AA] py-4 text-center">No study sessions yet. Open a topic and start a session!</div>
             )}
           </CardContent>
         </Card>
@@ -275,6 +302,51 @@ export default function Dashboard() {
                 <Link to="/planner">Review {dueCardsCount} Cards</Link>
               </Button>
             )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Timer className="w-5 h-5 text-[#38BDF8]" /> Last Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {lastSession ? (
+              <div className="text-center py-3">
+                <span className="text-3xl font-bold font-mono text-white">{formatLastSession(lastSession)}</span>
+                <span className="text-xs text-[#A1A1AA] block mt-1">
+                  {lastSession.status === 'finished' ? 'Completed' : lastSession.status} · {lastSession.completed ? 'goal met' : 'partial'}
+                </span>
+              </div>
+            ) : (
+              <div className="text-sm text-[#A1A1AA] py-4 text-center">No sessions yet</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card variant="glass" className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#38BDF8]" /> Weekly Hours
+            </CardTitle>
+            <CardDescription>{weekHours}h total · {activeDays} active day{activeDays !== 1 ? 's' : ''}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-28">
+              {weeklyData.map((d, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] font-mono text-[#A1A1AA]">{d.hours > 0 ? d.hours.toFixed(1) : ''}</span>
+                  <div
+                    className={`w-full rounded-t ${d.hours > 0 ? 'bg-[#38BDF8]/70' : 'bg-[#27272A]'}`}
+                    style={{ height: `${Math.max(4, (d.hours / Math.max(1, Math.max(...weeklyData.map(x => x.hours)))) * 100)}%` }}
+                  />
+                  <span className="text-[10px] text-[#71717A]">{d.date.slice(3)}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -301,6 +373,7 @@ export default function Dashboard() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-lg font-bold text-white">Study Intensity Heatmap</CardTitle>
+          <CardDescription>Based on recorded study-session time</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-1 overflow-x-auto pb-2">
@@ -313,7 +386,7 @@ export default function Dashboard() {
                     <div
                       key={day}
                       className={`w-3 h-3 rounded-sm ${getHeatmapColor(intensity)}`}
-                      title={`${dateStr}: Level ${intensity} study activity`}
+                      title={`${dateStr}: ${sessionMinutesByDate[dateStr] ? Math.round(sessionMinutesByDate[dateStr]) : 0} min of study`}
                     />
                   )
                 })}
@@ -359,3 +432,4 @@ function StatCard({ icon, label, value, progress, footer }: StatCardProps) {
     </Card>
   )
 }
+

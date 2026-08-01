@@ -1,5 +1,6 @@
 ﻿import { hydrateFromDb, installPersistence } from './repository'
-import { isPersistenceReady } from './db'
+import { getDbAsync } from './db'
+import { usePersistenceStore } from '../stores/persistenceStore'
 
 let uninstall: (() => void) | null = null
 let ready = false
@@ -7,18 +8,25 @@ let ready = false
 export async function bootstrap(): Promise<{ ready: boolean; reason?: string }> {
   if (ready) return { ready }
 
-  if (!isPersistenceReady()) {
-    return { ready: false, reason: 'node-runtime-missing' }
-  }
+  usePersistenceStore.getState().setStatus('checking')
 
-  const ok = await hydrateFromDb()
-  if (!ok) {
-    return { ready: false, reason: 'hydrate-failed' }
-  }
+  try {
+    await getDbAsync()
 
-  uninstall = installPersistence()
-  ready = true
-  return { ready: true }
+    const ok = await hydrateFromDb()
+    if (!ok) {
+      throw new Error('SQLite hydration failed during startup.')
+    }
+
+    uninstall = installPersistence()
+    ready = true
+    usePersistenceStore.getState().setStatus('ready')
+    return { ready: true }
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'Unknown persistence failure.'
+    usePersistenceStore.getState().setStatus('failed', reason)
+    return { ready: false, reason }
+  }
 }
 
 export function teardown(): void {
@@ -27,4 +35,5 @@ export function teardown(): void {
     uninstall = null
   }
   ready = false
+  usePersistenceStore.getState().reset()
 }

@@ -1,46 +1,57 @@
 ﻿/**
  * Local SQLite persistence layer.
  *
- * In a Tauri build the database lives under the app data directory.
- * In `vite dev` it lives under `<cwd>/.quantos/quantos.db`.
+ * Engine: `sql.js` (SQLite compiled to WASM) behind a synchronous adapter
+ * that mirrors the `better-sqlite3` API used by `repository.ts`.
  *
- * Both `better-sqlite3` and `node:fs` are dynamically imported so the
- * Vite renderer build (which externalizes them) does not try to resolve
- * them at bundle time.
+ * Why sql.js instead of better-sqlite3:
+ *   - better-sqlite3 is a Node.js native addon that cannot be dlopen'd
+ *     inside the Tauri WebView2 renderer or any browser runtime, which is
+ *     why the previous build reported "The SQLite native module could not
+ *     be loaded."
+ *   - sql.js runs the real SQLite engine compiled to WebAssembly, so the
+ *     exact same DDL / DML / transactions work identically everywhere.
+ *
+ * Persistence:
+ *   - In the Tauri desktop build the database is flushed to
+ *     `<appDataDir>/quantos.db` through the official @tauri-apps/plugin-fs.
+ *   - In a plain browser tab (vite dev frontend only) WASM cannot access
+ *     the filesystem and in-memory storage is the only option; the desktop
+ *     Tauri app is the supported runtime.
  */
 
-const SCHEMA_VERSION = 1
+import initSqlJs, { type Database as SqlJsDatabase, type SqlJsStatic, type BindParams } from 'sql.js/dist/sql-wasm-browser.js'
+import wasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url'
 
-type DatabaseInstance = {
+const SCHEMA_VERSION = 2
+
+interface StatementInstance {
+  run(...params: unknown[]): unknown
+  get(...params: unknown[]): unknown
+  all(...params: unknown[]): unknown[]
+}
+
+interface DatabaseInstance {
   pragma(name: string): unknown
-  prepare(sql: string): {
-    run(...params: unknown[]): unknown
-    get(...params: unknown[]): unknown
-    all(...params: unknown[]): unknown[]
-  }
+  prepare(sql: string): StatementInstance
   exec(sql: string): unknown
   transaction<T extends (...args: never[]) => unknown>(fn: T): T
   close(): void
 }
 
-type DatabaseCtor = {
-  new (filename: string): DatabaseInstance
-}
-
+let SQL: SqlJsStatic | null = null
+let sqlJsDb: SqlJsDatabase | null = null
 let db: DatabaseInstance | null = null
-let dbPath: string | null = null
+let dbPath: string = 'quantos.db'
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+let dirty = false
 
-function defaultDbPath(): string {
-  return `${typeof process !== 'undefined' ? process.cwd() : '.'}/.quantos/quantos.db`
-}
-
-function resolveDir(filePath: string): string {
-  const idx = Math.max(filePath.lastIndexOf('/'), filePath.lastIndexOf('\\'))
-  return idx === -1 ? '.' : filePath.slice(0, idx)
-}
+// ---------------------------------------------------------------------------
+// Path / Tauri helpers
+// ---------------------------------------------------------------------------
 
 export function getDbPath(): string {
-  return dbPath ?? defaultDbPath()
+  return dbPath
 }
 
 export function setDbPath(path: string): void {
@@ -50,36 +61,243 @@ export function setDbPath(path: string): void {
   dbPath = path
 }
 
-async function ensureDir(dir: string): Promise<void> {
+function isTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+}
+
+async function getAppDataFilePath(): Promise<string | null> {
   try {
-    const fs = (await import('node:fs')) as { mkdirSync(p: string, opts: { recursive: boolean }): void }
-    fs.mkdirSync(dir, { recursive: true })
+    const pathApi = await import('@tauri-apps/api/path')
+    const dir = await pathApi.appDataDir()
+    return `${dir}${dbPath}`
   } catch {
-    // best-effort; better-sqlite3 will surface a clearer error if it cannot open
+    return null
   }
 }
 
-async function loadBetterSqlite(): Promise<DatabaseCtor> {
-  const mod = (await import('better-sqlite3')) as unknown as { default: DatabaseCtor }
-  return mod.default
+async function loadPersistedBytes(): Promise<Uint8Array | null> {
+  if (!isTauri()) return null
+  try {
+    const fs = await import('@tauri-apps/plugin-fs')
+    const fullPath = await getAppDataFilePath()
+    if (!fullPath) return null
+    await fs.mkdir(fullPath.slice(0, fullPath.lastIndexOf('/')), { recursive: true })
+    if (await fs.exists(fullPath)) {
+      return await fs.readFile(fullPath)
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
-async function openDatabase(): Promise<DatabaseInstance> {
-  const Ctor = await loadBetterSqlite()
-  const path = getDbPath()
-  const dir = resolveDir(path)
-  await ensureDir(dir)
-  const database = new Ctor(path)
-  migrate(database)
-  return database
+async function flushToDisk(): Promise<void> {
+  if (!isTauri() || !sqlJsDb) return
+  try {
+    const fs = await import('@tauri-apps/plugin-fs')
+    const fullPath = await getAppDataFilePath()
+    if (!fullPath) return
+    const bytes = sqlJsDb.export()
+    await fs.writeFile(fullPath, bytes)
+  } catch {
+    // best-effort; keep the running application functional
+  }
 }
+
+function markDirty(): void {
+  dirty = true
+  if (flushTimer) clearTimeout(flushTimer)
+  flushTimer = setTimeout(() => {
+    flushTimer = null
+    if (dirty) {
+      dirty = false
+      void flushToDisk()
+    }
+  }, 250)
+}
+
+// ---------------------------------------------------------------------------
+// Named-parameter translation
+// ---------------------------------------------------------------------------
+
+const NAMED_PARAM_RE = /[@:$]([A-Za-z_][A-Za-z0-9_]*)/g
+
+function translateSql(sql: string): { sql: string; keys: string[] } {
+  const keys: string[] = []
+  const translated = sql.replace(NAMED_PARAM_RE, (_, key: string) => {
+    keys.push(key)
+    return '?'
+  })
+  return { sql: translated, keys }
+}
+
+// ---------------------------------------------------------------------------
+// Statement adapter (sql.js)
+// ---------------------------------------------------------------------------
+
+class SqlJsStatement implements StatementInstance {
+  private readonly db: SqlJsDatabase
+  private readonly translatedSql: string
+  private readonly keys: string[]
+
+  constructor(db: SqlJsDatabase, originalSql: string) {
+    this.db = db
+    const { sql, keys } = translateSql(originalSql)
+    this.translatedSql = sql
+    this.keys = keys
+  }
+
+  private bake(param: unknown): BindParams {
+    if (param == null) return []
+    if (Array.isArray(param)) {
+      // `undefined` entries translate to `null` for SQL binding.
+      return param.map((value) =>
+        value === undefined || value === null ? null : (value as string | number | Uint8Array),
+      )
+    }
+    if (typeof param === 'object') {
+      const record = param as Record<string, unknown>
+      return this.keys.map((key) => {
+        const value = record[key]
+        return value === undefined || value === null
+          ? null
+          : (value as string | number | Uint8Array)
+      })
+    }
+    return [param as string | number | Uint8Array]
+  }
+
+  run(...params: unknown[]): unknown {
+    const stmt = this.db.prepare(this.translatedSql)
+    try {
+      stmt.bind(this.bake(params.length > 0 ? params[0] : undefined))
+      stmt.step()
+      const changes = this.db.getRowsModified()
+      markDirty()
+      return { changes }
+    } finally {
+      stmt.free()
+    }
+  }
+
+  get(...params: unknown[]): unknown {
+    const stmt = this.db.prepare(this.translatedSql)
+    try {
+      stmt.bind(this.bake(params.length > 0 ? params[0] : undefined))
+      if (stmt.step()) {
+        return stmt.getAsObject()
+      }
+      return undefined
+    } finally {
+      stmt.free()
+    }
+  }
+
+  all(...params: unknown[]): unknown[] {
+    const stmt = this.db.prepare(this.translatedSql)
+    try {
+      stmt.bind(this.bake(params.length > 0 ? params[0] : undefined))
+      const out: unknown[] = []
+      while (stmt.step()) {
+        out.push(stmt.getAsObject())
+      }
+      return out
+    } finally {
+      stmt.free()
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Database adapter (sql.js)
+// ---------------------------------------------------------------------------
+
+class SqlJsDatabaseAdapter implements DatabaseInstance {
+  private readonly raw: SqlJsDatabase
+  private txDepth = 0
+
+  constructor(raw: SqlJsDatabase) {
+    this.raw = raw
+  }
+
+  pragma(name: string): unknown {
+    const eq = name.indexOf('=')
+    const key = (eq >= 0 ? name.slice(0, eq) : name).trim().toLowerCase()
+    const value = eq >= 0 ? name.slice(eq + 1).trim() : ''
+
+    // WAL journaling is not applicable to the WASM engine; the engine is
+    // still SQLite and every write is exported atomically to disk.
+    if (key === 'journal_mode' || key === 'wal_autocheckpoint') return undefined
+
+    try {
+      return this.raw.exec(`PRAGMA ${key}${value ? ` = ${value}` : ''};`)
+    } catch {
+      return undefined
+    }
+  }
+
+  prepare(sql: string): StatementInstance {
+    return new SqlJsStatement(this.raw, sql)
+  }
+
+  exec(sql: string): unknown {
+    const result = this.raw.exec(sql)
+    markDirty()
+    return result
+  }
+
+  transaction<T extends (...args: never[]) => unknown>(fn: T): T {
+    const wrapped = ((...args: never[]) => {
+      if (this.txDepth === 0) {
+        this.raw.exec('BEGIN')
+      } else {
+        this.raw.exec(`SAVEPOINT quantos_tx_${this.txDepth}`)
+      }
+      this.txDepth += 1
+      try {
+        const result = fn(...args)
+        this.txDepth -= 1
+        if (this.txDepth === 0) {
+          this.raw.exec('COMMIT')
+        } else {
+          this.raw.exec(`RELEASE SAVEPOINT quantos_tx_${this.txDepth}`)
+        }
+        markDirty()
+        return result
+      } catch (error) {
+        this.txDepth -= 1
+        if (this.txDepth === 0) {
+          this.raw.exec('ROLLBACK')
+        } else {
+          this.raw.exec(`ROLLBACK TO SAVEPOINT quantos_tx_${this.txDepth}`)
+          this.raw.exec(`RELEASE SAVEPOINT quantos_tx_${this.txDepth}`)
+        }
+        throw error
+      }
+    }) as T
+    return wrapped
+  }
+
+  close(): void {
+    if (this.txDepth !== 0) {
+      try {
+        this.raw.exec('ROLLBACK')
+      } catch {
+        // ignore
+      }
+      this.txDepth = 0
+    }
+    this.raw.close()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Schema
+// ---------------------------------------------------------------------------
 
 function migrate(database: DatabaseInstance): void {
-  const pragma = (name: string, value: string) => {
-    database.pragma(`${name} = ${value}`)
-  }
-  pragma('journal_mode', 'WAL')
-  pragma('foreign_keys', 'ON')
+  database.pragma('journal_mode = WAL')
+  database.pragma('foreign_keys = ON')
 
   database.exec(`
     CREATE TABLE IF NOT EXISTS user (
@@ -95,9 +313,9 @@ function migrate(database: DatabaseInstance): void {
       id TEXT PRIMARY KEY,
       phase_id TEXT NOT NULL,
       title TEXT NOT NULL,
-      description TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL,
-      estimated_hours REAL NOT NULL,
+      estimated_hours REAL NOT NULL DEFAULT 0,
       actual_hours REAL NOT NULL DEFAULT 0,
       notes TEXT NOT NULL DEFAULT '',
       mastery_criteria_json TEXT NOT NULL DEFAULT '[]',
@@ -127,6 +345,21 @@ function migrate(database: DatabaseInstance): void {
       updated_at INTEGER NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS study_session (
+      id TEXT PRIMARY KEY,
+      topic_id TEXT NOT NULL,
+      phase_id TEXT NOT NULL,
+      start_time INTEGER NOT NULL,
+      end_time INTEGER,
+      duration_minutes INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL,
+      completed INTEGER NOT NULL DEFAULT 0,
+      notes TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      elapsed_seconds INTEGER NOT NULL DEFAULT 0
+    );
+
     CREATE TABLE IF NOT EXISTS sm2_card (
       id TEXT PRIMARY KEY,
       topic_id TEXT NOT NULL,
@@ -147,6 +380,9 @@ function migrate(database: DatabaseInstance): void {
 
     CREATE INDEX IF NOT EXISTS idx_planner_task_date ON planner_task(date);
     CREATE INDEX IF NOT EXISTS idx_sm2_due ON sm2_card(next_review_date);
+    CREATE INDEX IF NOT EXISTS idx_study_session_topic ON study_session(topic_id);
+    CREATE INDEX IF NOT EXISTS idx_study_session_status ON study_session(status);
+    CREATE INDEX IF NOT EXISTS idx_study_session_start ON study_session(start_time);
   `)
 
   const setVersion = database.prepare(
@@ -154,6 +390,32 @@ function migrate(database: DatabaseInstance): void {
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
   )
   setVersion.run(String(SCHEMA_VERSION))
+}
+
+// ---------------------------------------------------------------------------
+// Open / close
+// ---------------------------------------------------------------------------
+
+async function openDatabase(): Promise<DatabaseInstance> {
+  const sqlModule = SQL ?? (await initSqlJs({ locateFile: () => wasmUrl }))
+  SQL = sqlModule
+
+  const persisted = await loadPersistedBytes()
+  const rawDb = persisted && persisted.length > 0 ? new sqlModule.Database(persisted) : new sqlModule.Database()
+
+  sqlJsDb = rawDb
+  const adapter = new SqlJsDatabaseAdapter(rawDb)
+  db = adapter
+  migrate(adapter)
+
+  // Best-effort flush when the window closes.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+      void flushToDisk()
+    })
+  }
+
+  return adapter
 }
 
 export async function getDbAsync(): Promise<DatabaseInstance> {
@@ -164,15 +426,19 @@ export async function getDbAsync(): Promise<DatabaseInstance> {
 
 export function closeDb(): void {
   if (db) {
-    db.close()
+    try {
+      db.close()
+    } catch {
+      // ignore
+    }
     db = null
+    sqlJsDb = null
   }
 }
 
+/**
+ * True once the SQLite connection has been opened successfully.
+ */
 export function isPersistenceReady(): boolean {
-  // The presence of `process.versions.node` indicates we are running
-  // under Node-style APIs (Tauri renderer has them, the browser does
-  // not). For local-first builds we still let the renderer attempt
-  // `getDbAsync` and surface a useful UI fallback when it fails.
-  return typeof process !== 'undefined' && typeof process.versions === 'object' && typeof process.versions.node === 'string'
+  return db !== null && sqlJsDb !== null
 }

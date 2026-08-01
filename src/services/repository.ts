@@ -1,10 +1,12 @@
 ﻿import { getDbAsync } from './db'
 import { useCurriculumStore } from '../stores/curriculumStore'
 import { usePlannerStore } from '../stores/plannerStore'
+import { useStudySessionStore } from '../stores/studySessionStore'
 import { useSpacedRepetitionStore } from '../stores/spacedRepetitionStore'
 import { useUserStore } from '../stores/userStore'
 import type { CurriculumNode } from '../stores/curriculumStore'
 import type { DailyTask } from '../stores/plannerStore'
+import type { StudySession } from '../stores/studySessionStore'
 import type { SM2Card } from '../stores/spacedRepetitionStore'
 import type { User } from '../stores/userStore'
 
@@ -42,6 +44,21 @@ interface PlannerLogRow {
   focus_rating: number
   reflection: string
   updated_at: number
+}
+
+interface StudySessionRow {
+  id: string
+  topic_id: string
+  phase_id: string
+  start_time: number
+  end_time: number | null
+  duration_minutes: number
+  status: StudySession['status']
+  completed: number
+  notes: string
+  created_at: number
+  updated_at: number
+  elapsed_seconds: number
 }
 
 interface SM2CardRow {
@@ -298,6 +315,83 @@ export async function upsertPlannerLog(log: { date: string; focusRating: number;
   }
 }
 
+// ----- Study sessions -----
+
+function toStudySession(row: StudySessionRow): StudySession {
+  return {
+    id: row.id,
+    topicId: row.topic_id,
+    phaseId: row.phase_id,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    durationMinutes: row.duration_minutes,
+    status: row.status,
+    completed: row.completed === 1,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    elapsedSeconds: row.elapsed_seconds,
+  }
+}
+
+export async function loadAllStudySessions(): Promise<Record<string, StudySession> | null> {
+  try {
+    const db = await getDbAsync()
+    const rows = db.prepare('SELECT * FROM study_session ORDER BY updated_at DESC').all() as StudySessionRow[]
+    const out: Record<string, StudySession> = {}
+    for (const row of rows) {
+      out[row.id] = toStudySession(row)
+    }
+    return out
+  } catch {
+    return null
+  }
+}
+
+export async function upsertStudySession(session: StudySession): Promise<void> {
+  try {
+    const db = await getDbAsync()
+    db.prepare(
+      `
+      INSERT INTO study_session (
+        id, topic_id, phase_id, start_time, end_time,
+        duration_minutes, status, completed, notes,
+        created_at, updated_at, elapsed_seconds
+      ) VALUES (@id, @topicId, @phaseId, @startTime, @endTime,
+                @durationMinutes, @status, @completed, @notes,
+                @createdAt, @updatedAt, @elapsedSeconds)
+      ON CONFLICT(id) DO UPDATE SET
+        topic_id = excluded.topic_id,
+        phase_id = excluded.phase_id,
+        start_time = excluded.start_time,
+        end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes,
+        status = excluded.status,
+        completed = excluded.completed,
+        notes = excluded.notes,
+        created_at = excluded.created_at,
+        updated_at = excluded.updated_at,
+        elapsed_seconds = excluded.elapsed_seconds
+    `,
+    ).run({
+      id: session.id,
+      topicId: session.topicId,
+      phaseId: session.phaseId,
+      startTime: session.startTime,
+      endTime: session.endTime,
+      durationMinutes: session.durationMinutes,
+      status: session.status,
+      completed: session.completed ? 1 : 0,
+      notes: session.notes,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      elapsedSeconds: session.elapsedSeconds,
+    })
+  } catch {
+    // best-effort
+  }
+}
+
 // ----- SM2 -----
 
 export async function loadAllSM2Cards(): Promise<Record<string, SM2Card> | null> {
@@ -437,6 +531,7 @@ export async function hydrateFromDb(): Promise<boolean> {
   let nodes: Record<string, CurriculumNode> | null = null
   let tasks: Record<string, DailyTask> | null = null
   let logs: Record<string, { date: string; focusRating: number; reflection: string }> | null = null
+  let sessions: Record<string, StudySession> | null = null
   let cards: Record<string, SM2Card> | null = null
   let user: User | null = null
 
@@ -444,6 +539,7 @@ export async function hydrateFromDb(): Promise<boolean> {
     nodes = await loadAllCurriculumNodes()
     tasks = await loadAllPlannerTasks()
     logs = await loadAllPlannerLogs()
+    sessions = await loadAllStudySessions()
     cards = await loadAllSM2Cards()
     user = await loadUser()
   } catch {
@@ -461,6 +557,9 @@ export async function hydrateFromDb(): Promise<boolean> {
   }
   if (tasks || logs) {
     usePlannerStore.getState()._hydrate({ tasks: tasks ?? {}, logs: logs ?? {} })
+  }
+  if (sessions && Object.keys(sessions).length > 0) {
+    useStudySessionStore.getState()._hydrate({ sessions })
   }
   if (cards) {
     useSpacedRepetitionStore.getState()._hydrate({ cards })
@@ -511,6 +610,15 @@ export function installPersistence(): () => void {
         for (const log of Object.values(state.logs)) {
           void upsertPlannerLog(log)
         }
+      }
+    }),
+  )
+
+  unsubs.push(
+    useStudySessionStore.subscribe((state, prev) => {
+      if (state.sessions === prev.sessions) return
+      for (const session of Object.values(state.sessions)) {
+        void upsertStudySession(session)
       }
     }),
   )

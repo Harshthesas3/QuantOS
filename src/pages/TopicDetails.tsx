@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Clock, Plus, Save, ArrowRight, Trash2, Edit2, Play, CheckCircle, FileText, FolderOpen, Flag } from 'lucide-react'
 import { useCurriculumStore, NodeStatus } from '../stores/curriculumStore'
-import { usePlannerStore } from '../stores/plannerStore'
 import { useSpacedRepetitionStore } from '../stores/spacedRepetitionStore'
+import { useStudySessionStore } from '../stores/studySessionStore'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -16,8 +16,10 @@ export default function TopicDetails() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { nodes, updateNodeStatus, updateNodeNotes, addActualHours, toggleMasteryCriterion, addResource, removeResource, updateResourceStatus } = useCurriculumStore()
-  const { addTask, startTimer, activeTimer, stopTimer } = usePlannerStore()
   const { addCard } = useSpacedRepetitionStore()
+  const activeStudySession = useStudySessionStore((state) =>
+    state.activeSessionId ? state.sessions[state.activeSessionId] ?? null : null,
+  )
 
   const node = id ? nodes[id] : null
   const [notesText, setNotesText] = useState('')
@@ -73,10 +75,7 @@ export default function TopicDetails() {
 
   const handleStartStudySession = () => {
     if (!id) return
-    const taskTitle = `Study ${node.id}: ${node.title}`
-    const taskId = addTask(taskTitle, 60, id)
-    startTimer(taskId)
-    toastSuccess('Study session started', `Timer running for ${taskTitle}`)
+    navigate(`/study/${node.id}`)
   }
 
   const handleMarkComplete = () => {
@@ -109,7 +108,7 @@ export default function TopicDetails() {
 
   const parentNodes = node.prerequisites.map(pId => nodes[pId]).filter(Boolean)
   const childNodes = Object.values(nodes).filter(n => n.prerequisites.includes(node.id))
-  const isTimerRunningOnThisNode = activeTimer && Object.values(usePlannerStore.getState().tasks).find(t => t.id === activeTimer.taskId)?.nodeId === node.id
+  const isTimerRunningOnThisNode = activeStudySession?.topicId === node.id && (activeStudySession.status === 'active' || activeStudySession.status === 'paused')
 
   const getStatusBadge = (status: NodeStatus) => {
     switch (status) {
@@ -155,15 +154,9 @@ export default function TopicDetails() {
             <CheckCircle className="w-3.5 h-3.5 mr-1" />
             {node.status === 'MASTERED' ? 'Unmaster' : node.status === 'COMPLETED' ? 'Master' : 'Complete'}
           </Button>
-          {isTimerRunningOnThisNode ? (
-            <Button variant="destructive" size="sm" onClick={() => stopTimer()}>
-              <Clock className="w-3.5 h-3.5 mr-1" /> Stop Timer
-            </Button>
-          ) : (
-            <Button variant="primary" size="sm" onClick={handleStartStudySession}>
-              <Play className="w-3.5 h-3.5 mr-1" /> Start Study
-            </Button>
-          )}
+          <Button variant={isTimerRunningOnThisNode ? 'secondary' : 'primary'} size="sm" onClick={handleStartStudySession}>
+            <Play className="w-3.5 h-3.5 mr-1" /> {isTimerRunningOnThisNode ? 'Open Session' : 'Start Study'}
+          </Button>
         </div>
       </header>
 

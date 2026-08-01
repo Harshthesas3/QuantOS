@@ -1,1 +1,5 @@
 node_modules
+dist
+.dev-err.txt
+.dev-out.txt
+.poll.ps1

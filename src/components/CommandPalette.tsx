@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LayoutDashboard, Calendar, BarChart2, Compass, Settings, CornerDownLeft, LibraryBig, FolderKanban, NotebookPen } from 'lucide-react'
+import { Search, LayoutDashboard, Calendar, BarChart2, Compass, Settings, CornerDownLeft, LibraryBig, FolderKanban, NotebookPen, BrainCircuit } from 'lucide-react'
 import { useCurriculumStore } from '../stores/curriculumStore'
 import { Badge } from './ui/badge'
 
@@ -32,6 +32,7 @@ export default function CommandPalette() {
     { type: 'Navigation', title: 'Go to Resources', path: '/resources', icon: LibraryBig },
     { type: 'Navigation', title: 'Go to Projects', path: '/projects', icon: FolderKanban },
     { type: 'Navigation', title: 'Go to Notes', path: '/notes', icon: NotebookPen },
+    { type: 'Navigation', title: 'Open Study Session', path: '/study', icon: BrainCircuit },
     { type: 'Navigation', title: 'Go to Daily Planner', path: '/planner', icon: Calendar },
     { type: 'Navigation', title: 'Go to Analytics', path: '/analytics', icon: BarChart2 },
     { type: 'Navigation', title: 'Go to Settings', path: '/settings', icon: Settings },

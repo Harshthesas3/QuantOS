@@ -9,6 +9,7 @@ import { ToastContainer } from './components/ui/toast'
 import { TooltipProvider } from './components/ui/tooltip'
 import { bootstrap } from './services/bootstrap'
 import { TaskTimeBridge } from './services/taskTimeBridge'
+import { StudySessionBridge } from './services/studySessionBridge'
 import Routes from './routes'
 import { useDailyReminder } from './hooks/useDailyReminder'
 
@@ -27,6 +28,7 @@ function AppContent() {
       {!isLoginPage && <CommandPalette />}
       <ToastContainer />
       <TaskTimeBridge />
+      <StudySessionBridge />
     </div>
   )
 }

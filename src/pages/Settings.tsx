@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -17,14 +17,16 @@ import {
 } from 'lucide-react'
 import { useCurriculumStore } from '../stores/curriculumStore'
 import { usePlannerStore } from '../stores/plannerStore'
+import { useStudySessionStore } from '../stores/studySessionStore'
 import { useSpacedRepetitionStore } from '../stores/spacedRepetitionStore'
 import { useUserStore } from '../stores/userStore'
+import { usePersistenceStore } from '../stores/persistenceStore'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { toastSuccess, toastError } from '../lib/toast'
-import { isPersistenceReady } from '../services/db'
 import {
   replaceAllCurriculumNodes,
+  upsertStudySession,
 } from '../services/repository'
 import type { ExportPayload } from '../types'
 
@@ -46,15 +48,16 @@ export default function Settings() {
 
   const { nodes } = useCurriculumStore()
   const { tasks, logs, activeTimer } = usePlannerStore()
+  const { sessions } = useStudySessionStore()
   const { cards } = useSpacedRepetitionStore()
   const { user, changePassword } = useUserStore()
+  const persistenceStatus = usePersistenceStore((state) => state.status)
+  const persistenceReason = usePersistenceStore((state) => state.reason)
 
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
   const [pwBusy, setPwBusy] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
-
-  const persistenceOk = useMemo(() => isPersistenceReady(), [])
 
   useEffect(() => {
     document.body.classList.remove('theme-dark', 'theme-light')
@@ -85,6 +88,7 @@ export default function Settings() {
         user,
         curriculum: { nodes: { ...nodes } },
         planner: { tasks: { ...tasks }, logs: { ...logs } },
+        studySessions: { sessions: { ...sessions } },
         spacedRepetition: { cards: { ...cards } },
       }
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
@@ -120,7 +124,7 @@ export default function Settings() {
         const data = JSON.parse(event.target?.result as string) as ExportPayload
         if (data.curriculum?.nodes) {
           useCurriculumStore.getState()._hydrate({ nodes: data.curriculum.nodes })
-          if (persistenceOk) {
+          if (persistenceStatus === 'ready') {
             void replaceAllCurriculumNodes(data.curriculum.nodes)
           }
         }
@@ -129,6 +133,14 @@ export default function Settings() {
             tasks: data.planner.tasks ?? {},
             logs: data.planner.logs ?? {},
           })
+        }
+        if (data.studySessions?.sessions) {
+          useStudySessionStore.getState()._hydrate({ sessions: data.studySessions.sessions })
+          if (persistenceStatus === 'ready') {
+            for (const session of Object.values(data.studySessions.sessions)) {
+              void upsertStudySession(session)
+            }
+          }
         }
         if (data.spacedRepetition?.cards) {
           useSpacedRepetitionStore.getState()._hydrate({ cards: data.spacedRepetition.cards })
@@ -152,6 +164,7 @@ export default function Settings() {
     if (resetConfirm !== 'RESET') return
     useCurriculumStore.getState()._hydrate({ nodes: {} })
     usePlannerStore.getState()._hydrate({ tasks: {}, logs: {} })
+    useStudySessionStore.getState()._hydrate({ sessions: {} })
     useSpacedRepetitionStore.getState()._hydrate({ cards: {} })
     setResetConfirm('')
     toastSuccess('All progress has been reset.')
@@ -185,6 +198,7 @@ export default function Settings() {
   const storageKeys = [
     'quantos-curriculum-storage',
     'quantos-planner-storage',
+    'quantos-study-session-storage',
     'quantos-spaced-repetition-storage',
     'user-storage',
     STORAGE_THEME,
@@ -211,16 +225,17 @@ export default function Settings() {
         <p className="text-sm text-[#A1A1AA] mt-1">Configure your workspace and manage data.</p>
       </header>
 
-      {!persistenceOk && (
+      {persistenceStatus !== 'ready' && (
         <Card variant="glass" className="border-yellow-500/30">
           <CardContent className="space-y-2 py-4">
             <div className="flex items-center gap-2 text-yellow-300 text-sm font-semibold">
-              <AlertTriangle className="w-4 h-4" /> Local persistence not initialised
+              <AlertTriangle className="w-4 h-4" />
+              {persistenceStatus === 'failed' ? 'Local persistence failed' : 'Checking local persistence'}
             </div>
             <p className="text-xs text-[#A1A1AA]">
-              The SQLite native module could not be loaded. The app will continue
-              using in-memory state for this session only. Close and relaunch
-              after rebuilding to restore persistence.
+              {persistenceStatus === 'failed'
+                ? persistenceReason ?? 'The SQLite database could not be opened during startup.'
+                : 'Opening the SQLite database and syncing local stores.'}
             </p>
           </CardContent>
         </Card>

@@ -1,16 +1,30 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area, CartesianGrid } from 'recharts'
-import { Activity, Flame, BookOpen, TrendingUp, Target, Calendar, Award, Zap } from 'lucide-react'
+import { Activity, Flame, BookOpen, TrendingUp, Target, Calendar, Award, Zap, Clock, Timer, Layers, Tag } from 'lucide-react'
 import { useCurriculumStore } from '../stores/curriculumStore'
-import { usePlannerStore } from '../stores/plannerStore'
+import { useStudySessionStore } from '../stores/studySessionStore'
 import { useSpacedRepetitionStore } from '../stores/spacedRepetitionStore'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { ProgressBar } from '../components/ui/progress'
+import {
+  getTotalStudyHours,
+  getSessionMetrics,
+  getStudyStreak,
+  getSessionDateKey,
+  groupSessionMinutesByDate,
+  groupSessionMinutesByPhase,
+  groupSessionMinutesByTopic,
+  getDateKey,
+  getProjectedStudyMinutes,
+} from '../lib/studyMetrics'
 
 export default function Analytics() {
   const { nodes } = useCurriculumStore()
-  const { tasks, logs } = usePlannerStore()
+  const { sessions } = useStudySessionStore()
   const { cards } = useSpacedRepetitionStore()
 
+  const sessionList = Object.values(sessions)
+
+  // ---- Curriculum-based completion ----
   const totalHours = Object.values(nodes).reduce((acc, n) => acc + n.estimatedHours, 0)
   const completedHours = Object.values(nodes).filter(n => n.status === 'COMPLETED' || n.status === 'MASTERED').reduce((acc, n) => acc + n.estimatedHours, 0)
   const overallProgress = totalHours > 0 ? Math.round((completedHours / totalHours) * 100) : 0
@@ -37,121 +51,142 @@ export default function Analytics() {
     totalHours: val.hours,
   }))
 
+  // ---- Session-powered metrics ----
+  const metrics = getSessionMetrics(sessionList)
+  const totalStudyHours = getTotalStudyHours(sessionList)
+  const currentStreak = getStudyStreak(sessionList)
+
+  const avgSessionMinutes = metrics.averageMinutes
+  const longestMinutes = metrics.longestMinutes
+  const todayMinutes = metrics.todayMinutes
+  const weekMinutes = metrics.weekMinutes
+  const monthMinutes = metrics.monthMinutes
+
+  const formatMins = (mins: number) => {
+    if (mins <= 0) return '0m'
+    if (mins < 60) return `${Math.round(mins)}m`
+    const h = Math.floor(mins / 60)
+    const m = Math.round(mins % 60)
+    return m > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${h}h`
+  }
+
+  // Daily study minutes over last 30 days (from sessions).
+  const minutesByDate = groupSessionMinutesByDate(sessionList)
   const last30Days = Array.from({ length: 30 }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (29 - i))
-    return d.toISOString().split('T')[0]
+    return getDateKey(d)
   })
 
-  const dailyData = last30Days.map(date => {
-    const dayTasks = Object.values(tasks).filter(t => t.date === date)
-    const minutes = dayTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
-    const log = logs[date]
-    return {
-      date: date.slice(5),
-      hours: parseFloat((minutes / 60).toFixed(2)),
-      focus: log?.focusRating || 0,
-    }
-  })
+  const dailyData = last30Days.map(date => ({
+    date: date.slice(5),
+    hours: parseFloat(((minutesByDate[date] ?? 0) / 60).toFixed(2)),
+  }))
 
+  // Weekly hours over last 4 weeks (Mon-Sun buckets).
   const weeklyData = Array.from({ length: 4 }, (_, i) => {
-    const weekStart = new Date()
-    weekStart.setDate(weekStart.getDate() - (21 - i * 7))
-    const weekDates = Array.from({ length: 7 }, (_, j) => {
-      const d = new Date(weekStart)
-      d.setDate(d.getDate() + j)
-      return d.toISOString().split('T')[0]
-    })
-    const weekMinutes = weekDates.reduce((acc, d) => {
-      const dayTasks = Object.values(tasks).filter(t => t.date === d)
-      return acc + dayTasks.reduce((a, c) => a + c.actualMinutes, 0)
+    const end = new Date()
+    end.setDate(end.getDate() - (3 - i) * 7)
+    // Find the Sunday of that week.
+    const sunday = new Date(end)
+    const day = (end.getDay() + 6) % 7
+    sunday.setDate(end.getDate() + (6 - day))
+    const monday = new Date(sunday)
+    monday.setDate(sunday.getDate() - 6)
+    const weekMinutesTotal = sessionList.reduce((acc, s) => {
+      const anchor = s.endTime ?? s.startTime ?? s.createdAt
+      if (anchor >= monday.getTime() && anchor <= sunday.getTime() + 86_399_999) {
+        return acc + (s.elapsedSeconds / 60)
+      }
+      return acc
     }, 0)
     return {
       week: `W${i + 1}`,
-      hours: parseFloat((weekMinutes / 60).toFixed(1)),
+      hours: parseFloat((weekMinutesTotal / 60).toFixed(1)),
     }
   })
 
+  // Monthly hours over last 3 months.
   const monthlyData = Array.from({ length: 3 }, (_, i) => {
     const monthStart = new Date()
     monthStart.setMonth(monthStart.getMonth() - (2 - i))
     const monthStr = monthStart.toISOString().slice(0, 7)
-    const monthTasks = Object.values(tasks).filter(t => t.date.startsWith(monthStr))
-    const monthMinutes = monthTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
+    const monthMinutesTotal = sessionList.reduce((acc, s) => {
+      const anchor = s.endTime ?? s.startTime ?? s.createdAt
+      const d = new Date(anchor)
+      if (d.toISOString().slice(0, 7) === monthStr) {
+        return acc + (s.elapsedSeconds / 60)
+      }
+      return acc
+    }, 0)
     return {
       month: monthStart.toLocaleString('default', { month: 'short' }),
-      hours: parseFloat((monthMinutes / 60).toFixed(1)),
+      hours: parseFloat((monthMinutesTotal / 60).toFixed(1)),
     }
   })
 
-  const sortedLogDates = Object.keys(logs).sort()
+  // Longest streak (historical).
+  const activityDates = Array.from(new Set(sessionList.map(getSessionDateKey))).sort()
   let longestStreak = 0
-  let currentStreak = 0
-  let prevDate: Date | null = null
-
-  sortedLogDates.forEach(dateStr => {
-    const currDate = new Date(dateStr)
-    if (prevDate === null) {
-      currentStreak = 1
+  let run = 0
+  let prev: Date | null = null
+  for (const dateStr of activityDates) {
+    const curr = new Date(dateStr)
+    if (prev) {
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / 86_400_000)
+      run = diffDays === 1 ? run + 1 : 1
     } else {
-      const diffTime = Math.abs(currDate.getTime() - prevDate.getTime())
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-      if (diffDays === 1) {
-        currentStreak += 1
-      } else if (diffDays > 1) {
-        longestStreak = Math.max(longestStreak, currentStreak)
-        currentStreak = 1
-      }
+      run = 1
     }
-    prevDate = currDate
-  })
-  longestStreak = Math.max(longestStreak, currentStreak)
+    longestStreak = Math.max(longestStreak, run)
+    prev = curr
+  }
 
-  const cardsList = Object.values(cards)
-  const efDistribution: Record<string, number> = { '1.3-1.7': 0, '1.8-2.2': 0, '2.3-2.5': 0, '2.6+': 0 }
-  cardsList.forEach(c => {
-    if (c.easeFactor <= 1.7) efDistribution['1.3-1.7'] += 1
-    else if (c.easeFactor <= 2.2) efDistribution['1.8-2.2'] += 1
-    else if (c.easeFactor <= 2.5) efDistribution['2.3-2.5'] += 1
-    else efDistribution['2.6+'] += 1
-  })
+  // ---- Per-phase and per-topic breakdowns ----
+  const phaseMinutes = groupSessionMinutesByPhase(sessionList)
+  const hoursPerPhase = Object.entries(phaseMinutes)
+    .map(([phaseId, minutes]) => ({
+      phaseId,
+      label: phaseId.replace('PHASE_', 'Phase '),
+      hours: minutes / 60,
+    }))
+    .sort((a, b) => b.hours - a.hours)
 
-  const efData = Object.entries(efDistribution).map(([range, count]) => ({
-    name: range,
-    value: count
-  }))
+  const topicMinutes = groupSessionMinutesByTopic(sessionList)
+  const hoursPerTopic = Object.entries(topicMinutes)
+    .map(([topicId, minutes]) => ({
+      topicId,
+      title: nodes[topicId]?.title ?? topicId,
+      hours: minutes / 60,
+    }))
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 10)
 
-  const COLORS = ['#38BDF8', '#71717A', '#52525B', '#27272A']
-
-  const avgDailyHours = dailyData.reduce((acc, d) => acc + d.hours, 0) / Math.max(1, dailyData.filter(d => d.hours > 0).length)
-  const velocityData = dailyData.filter(d => d.hours > 0).slice(-14)
-  const learningVelocity = velocityData.length > 0
-    ? velocityData.reduce((acc, d) => acc + d.hours, 0) / velocityData.length
-    : 0
-
+  // ---- Forecast from session velocity ----
   const forecastDays = 30
+  const projectedTotal = getProjectedStudyMinutes(sessionList, forecastDays)
+  const dailyAverage = metrics.activeDays > 0 ? metrics.totalMinutes / metrics.activeDays : 0
   const forecastData = Array.from({ length: forecastDays }, (_, i) => {
     const d = new Date()
     d.setDate(d.getDate() + i)
-    const projected = avgDailyHours * (1 + i * 0.01)
     return {
       date: d.toISOString().slice(5),
-      projected: parseFloat(projected.toFixed(2)),
+      projected: parseFloat((dailyAverage * (i + 1) / 60).toFixed(2)),
     }
   })
 
+  // ---- Heatmap (12 weeks, session-based) ----
   const heatmapWeeks = Array.from({ length: 12 }, (_, i) => i)
   const heatmapDays = Array.from({ length: 7 }, (_, i) => i)
   const today = new Date()
   const getHeatmapDate = (weekIdx: number, dayIdx: number) => {
     const d = new Date(today)
     d.setDate(d.getDate() - (12 - weekIdx) * 7 + (6 - dayIdx))
-    return d.toISOString().split('T')[0]
+    return getDateKey(d)
   }
 
   const getHeatmapIntensity = (dateStr: string) => {
-    const dayTasks = Object.values(tasks).filter(t => t.date === dateStr)
-    const minutes = dayTasks.reduce((acc, curr) => acc + curr.actualMinutes, 0)
+    const minutes = minutesByDate[dateStr] ?? 0
     const hours = minutes / 60
     if (hours === 0) return 0
     if (hours < 0.5) return 1
@@ -170,6 +205,23 @@ export default function Analytics() {
       default: return 'bg-[#18181B]'
     }
   }
+
+  // ---- SM-2 ----
+  const cardsList = Object.values(cards)
+  const efDistribution: Record<string, number> = { '1.3-1.7': 0, '1.8-2.2': 0, '2.3-2.5': 0, '2.6+': 0 }
+  cardsList.forEach(c => {
+    if (c.easeFactor <= 1.7) efDistribution['1.3-1.7'] += 1
+    else if (c.easeFactor <= 2.2) efDistribution['1.8-2.2'] += 1
+    else if (c.easeFactor <= 2.5) efDistribution['2.3-2.5'] += 1
+    else efDistribution['2.6+'] += 1
+  })
+
+  const efData = Object.entries(efDistribution).map(([range, count]) => ({
+    name: range,
+    value: count
+  }))
+
+  const COLORS = ['#38BDF8', '#71717A', '#52525B', '#27272A']
 
   const totalFlashcards = cardsList.length
   const dueToday = cardsList.filter(c => c.nextReviewDate <= today.toISOString().split('T')[0]).length
@@ -193,8 +245,8 @@ export default function Analytics() {
             <Flame className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Longest Streak</span>
-            <span className="text-2xl font-bold font-mono mt-1 block">{longestStreak} days</span>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Current Streak</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{currentStreak} days</span>
           </div>
         </Card>
 
@@ -213,8 +265,8 @@ export default function Analytics() {
             <Zap className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Learning Velocity</span>
-            <span className="text-2xl font-bold font-mono mt-1 block">{learningVelocity.toFixed(1)}h/day</span>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Total Hours</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{totalStudyHours.toFixed(1)}h</span>
           </div>
         </Card>
 
@@ -226,6 +278,48 @@ export default function Analytics() {
             <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Flashcards Active</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{totalFlashcards}</span>
             <span className="text-xs text-[#A1A1AA] block">{dueToday} due today · avg EF {avgEF.toFixed(1)}</span>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card variant="glass" className="flex items-center gap-4 p-5">
+          <div className="p-3 bg-[#38BDF8]/10 text-[#38BDF8] rounded-lg">
+            <Clock className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Avg Session</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(avgSessionMinutes)}</span>
+          </div>
+        </Card>
+
+        <Card variant="glass" className="flex items-center gap-4 p-5">
+          <div className="p-3 bg-yellow-500/10 text-yellow-400 rounded-lg">
+            <Timer className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Longest Session</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(longestMinutes)}</span>
+          </div>
+        </Card>
+
+        <Card variant="glass" className="flex items-center gap-4 p-5">
+          <div className="p-3 bg-red-500/10 text-red-400 rounded-lg">
+            <Award className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Longest Streak</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{longestStreak} days</span>
+          </div>
+        </Card>
+
+        <Card variant="glass" className="flex items-center gap-4 p-5">
+          <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg">
+            <Layers className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">This Month</span>
+            <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(monthMinutes)}</span>
           </div>
         </Card>
       </div>
@@ -261,32 +355,11 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> Learning Velocity (14-Day Avg)
+              <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> Weekly Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={velocityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                  <XAxis dataKey="date" stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#121318', borderColor: '#27272A', color: '#FAFAFA' }} />
-                  <Bar dataKey="hours" fill="#38BDF8" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="glass">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <BarChart className="w-5 h-5 text-[#38BDF8]" /> Weekly Hours
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
@@ -303,7 +376,7 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#38BDF8]" /> Monthly Hours
+              <Layers className="w-5 h-5 text-[#38BDF8]" /> Monthly Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -318,6 +391,86 @@ export default function Analytics() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Clock className="w-5 h-5 text-[#38BDF8]" /> This Week
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <span className="text-5xl font-bold font-mono text-white">{formatMins(weekMinutes)}</span>
+              <span className="text-xs text-[#A1A1AA] block mt-2">studied this week</span>
+            </div>
+            <div className="flex justify-between text-xs text-[#A1A1AA] pt-4 border-t border-[#27272A]/50">
+              <span>Today: {formatMins(todayMinutes)}</span>
+              <span>{metrics.activeDays} active day{metrics.activeDays !== 1 ? 's' : ''}</span>
+              <span>{metrics.completedCount} completed</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[#38BDF8]" /> Hours Per Phase
+            </CardTitle>
+            <CardDescription>Total study time recorded per curriculum phase</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {hoursPerPhase.length > 0 ? (
+              hoursPerPhase.map((entry) => (
+                <div key={entry.phaseId} className="flex items-center gap-3">
+                  <span className="text-xs font-mono text-[#A1A1AA] w-20 truncate">{entry.label}</span>
+                  <div className="flex-1">
+                    <ProgressBar
+                      value={entry.hours}
+                      max={Math.max(1, hoursPerPhase[0]?.hours ?? 1)}
+                      size="sm"
+                      showLabel={false}
+                    />
+                  </div>
+                  <span className="text-xs font-mono text-white w-16 text-right">{entry.hours.toFixed(1)}h</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-[#A1A1AA] py-4 text-center">No session data yet.</div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card variant="glass">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <Tag className="w-5 h-5 text-[#38BDF8]" /> Hours Per Topic
+            </CardTitle>
+            <CardDescription>Top topics by recorded study time</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {hoursPerTopic.length > 0 ? (
+              hoursPerTopic.map((entry) => (
+                <div key={entry.topicId} className="flex items-center gap-3">
+                  <span className="text-xs font-mono text-[#A1A1AA] w-14 truncate">{entry.topicId}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-white truncate">{entry.title}</div>
+                    <ProgressBar
+                      value={entry.hours}
+                      max={Math.max(1, hoursPerTopic[0]?.hours ?? 1)}
+                      size="sm"
+                      showLabel={false}
+                    />
+                  </div>
+                  <span className="text-xs font-mono text-white w-16 text-right">{entry.hours.toFixed(1)}h</span>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-[#A1A1AA] py-4 text-center">No session data yet.</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -383,9 +536,14 @@ export default function Analytics() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> 30-Day Forecast
+            <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> 30-Day Study Forecast
           </CardTitle>
-          <CardDescription>Projected study hours based on current learning velocity</CardDescription>
+          <CardDescription>
+            Projected study hours from your session velocity
+            {metrics.activeDays > 0
+              ? ` · ~${formatMins(dailyAverage)}/day → ~${(projectedTotal / 60).toFixed(1)}h in ${forecastDays} days`
+              : ' · start a few sessions to unlock the forecast'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-48">
@@ -405,6 +563,7 @@ export default function Analytics() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-lg font-bold text-white">Study Heatmap (12 Weeks)</CardTitle>
+          <CardDescription>Recorded study-session minutes</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-1 overflow-x-auto pb-2">
@@ -417,7 +576,7 @@ export default function Analytics() {
                     <div
                       key={day}
                       className={`w-3 h-3 rounded-sm ${getHeatmapColor(intensity)}`}
-                      title={`${dateStr}: Level ${intensity}`}
+                      title={`${dateStr}: ${minutesByDate[dateStr] ? Math.round(minutesByDate[dateStr]) : 0} min`}
                     />
                   )
                 })}
@@ -438,3 +597,4 @@ export default function Analytics() {
     </div>
   )
 }
+

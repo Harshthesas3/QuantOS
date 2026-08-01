@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Compass, Calendar, BarChart2, Settings, Square, LibraryBig, FolderKanban, NotebookPen } from 'lucide-react'
+import { LayoutDashboard, Compass, Calendar, BarChart2, Settings, Square, LibraryBig, FolderKanban, NotebookPen, BrainCircuit } from 'lucide-react'
 import { usePlannerStore } from '../../stores/plannerStore'
 import { useTimerTicker, formatTime } from '../../hooks/useTimerTicker'
 
@@ -16,6 +16,7 @@ export default function Navigation() {
     { path: '/resources', label: 'Resources', icon: LibraryBig },
     { path: '/projects', label: 'Projects', icon: FolderKanban },
     { path: '/notes', label: 'Notes', icon: NotebookPen },
+    { path: '/study', label: 'Study', icon: BrainCircuit },
     { path: '/planner', label: 'Planner', icon: Calendar },
     { path: '/analytics', label: 'Analytics', icon: BarChart2 },
     { path: '/settings', label: 'Settings', icon: Settings },

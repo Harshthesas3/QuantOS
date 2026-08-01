@@ -1,6 +1,7 @@
 <div align="center">
 
-<!-- Logo placeholder — replace with the official QuantOS mark, e.g. `docs/images/logo.png` -->
+<img width="1254" height="1254" alt="image" src="https://github.com/user-attachments/assets/e41ef57b-f1f3-42cf-8aa8-b18fed86c8eb" />
+
 
 # QuantOS
 
@@ -30,21 +31,24 @@ SQLite, and keeps everything on your machine — fast, private, and offline by d
 > Image placeholders — capture real screenshots and save them as the paths below.
 > Recommended: 1440 × 900, dark theme.
 
-<!-- Dashboard screenshot: docs/images/dashboard.png -->
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/02e3cff8-3ca3-4ed4-9ffe-98f7e1cd3fa4" />
+
 <p align="center">
   <img src="docs/images/dashboard.png" alt="QuantOS Dashboard" width="720" />
   <br/>
   <em>The dashboard — today's mission, live metrics, and study activity in one view.</em>
 </p>
 
-<!-- Roadmap screenshot: docs/images/roadmap.png -->
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/30f29b5e-8340-437d-8701-744373661a29" />
+
 <p align="center">
   <img src="docs/images/roadmap.png" alt="QuantOS Roadmap" width="720" />
   <br/>
   <em>The roadmap — eleven phases from JEE mathematics to portfolio alpha research.</em>
 </p>
 
-<!-- Study session screenshot: docs/images/study.png -->
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/373fa8fc-63d7-4e9a-8d2b-888f8f967df6" />
+
 <p align="center">
   <img src="docs/images/study.png" alt="QuantOS Study Session" width="720" />
   <br/>

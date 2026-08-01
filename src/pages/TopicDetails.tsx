@@ -40,9 +40,9 @@ export default function TopicDetails() {
 
   if (!node) {
     return (
-      <div className="flex-1 p-8 text-center text-[#FAFAFA]">
+      <div className="flex-1 p-8 text-center text-[#F4F1EA]">
         <h2 className="text-xl font-bold">Node not found.</h2>
-        <Link to="/roadmap" className="text-[#38BDF8] mt-4 block hover:underline">Back to Roadmap</Link>
+        <Link to="/roadmap" className="text-[#C8BFAF] mt-4 block hover:underline">Back to Roadmap</Link>
       </div>
     )
   }
@@ -128,15 +128,15 @@ export default function TopicDetails() {
   const difficultyColor = difficulty === 'Beginner' ? 'text-green-400' : difficulty === 'Intermediate' ? 'text-yellow-400' : difficulty === 'Advanced' ? 'text-orange-400' : 'text-red-400'
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 pb-4 border-b border-[#2A2E36]">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate('/roadmap')}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono px-2 py-0.5 bg-[#27272A] text-[#38BDF8] rounded">
+              <span className="text-xs font-mono px-2 py-0.5 bg-[#2A2E36] text-[#C8BFAF] rounded">
                 {node.id}
               </span>
               <Badge status="default" variant="outline" className="text-xs">
@@ -165,18 +165,18 @@ export default function TopicDetails() {
           <Card variant="glass">
             <CardHeader>
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#38BDF8]" /> Description
+                <FileText className="w-5 h-5 text-[#C8BFAF]" /> Description
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-[#A1A1AA] leading-relaxed">{node.description}</p>
+              <p className="text-sm text-[#A9A39A] leading-relaxed">{node.description}</p>
             </CardContent>
           </Card>
 
           <Card variant="glass">
             <CardHeader className="flex flex-row justify-between items-center">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <Flag className="w-5 h-5 text-[#38BDF8]" /> Learning Objectives
+                <Flag className="w-5 h-5 text-[#C8BFAF]" /> Learning Objectives
               </CardTitle>
               <Badge status="info" variant="outline" className="text-[10px]">{masteredCount}/{node.masteryCriteria.length}</Badge>
             </CardHeader>
@@ -189,14 +189,14 @@ export default function TopicDetails() {
                     <li
                       key={index}
                       onClick={() => toggleMasteryCriterion(node.id, index)}
-                      className="flex gap-3 text-sm text-[#A1A1AA] cursor-pointer hover:text-[#FAFAFA] transition-colors items-start"
+                      className="flex gap-3 text-sm text-[#A9A39A] cursor-pointer hover:text-[#F4F1EA] transition-colors items-start"
                     >
                       <div className={`mt-0.5 w-5 h-5 border rounded flex items-center justify-center transition-colors ${
-                        checked ? 'bg-[#38BDF8] border-[#38BDF8]' : 'border-[#27272A]'
+                        checked ? 'bg-[#C8BFAF] border-[#C8BFAF]' : 'border-[#2A2E36]'
                       }`}>
                         {checked && <CheckCircle className="w-3.5 h-3.5 fill-white" />}
                       </div>
-                      <span className={checked ? 'line-through text-[#71717A]' : 'text-white'}>{cleanCrit}</span>
+                      <span className={checked ? 'line-through text-[#7C7870]' : 'text-white'}>{cleanCrit}</span>
                     </li>
                   )
                 })}
@@ -208,7 +208,7 @@ export default function TopicDetails() {
           <Card variant="glass">
             <CardHeader className="flex flex-row justify-between items-center">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <Clock className="w-5 h-5 text-[#38BDF8]" /> Time Tracking
+                <Clock className="w-5 h-5 text-[#C8BFAF]" /> Time Tracking
               </CardTitle>
               {!editingHours ? (
                 <Button variant="ghost" size="sm" onClick={() => { setEditHoursValue(String(node.actualHours)); setEditingHours(true) }}>
@@ -232,17 +232,17 @@ export default function TopicDetails() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-3 bg-[#18181B] rounded-lg">
-                  <span className="text-2xl font-bold font-mono text-[#38BDF8]">{node.actualHours.toFixed(1)}</span>
-                  <span className="text-xs text-[#A1A1AA] block mt-1">Actual Hours</span>
+                <div className="text-center p-3 bg-[#1F2229] rounded-lg">
+                  <span className="text-2xl font-bold font-mono text-[#C8BFAF]">{node.actualHours.toFixed(1)}</span>
+                  <span className="text-xs text-[#A9A39A] block mt-1">Actual Hours</span>
                 </div>
-                <div className="text-center p-3 bg-[#18181B] rounded-lg">
+                <div className="text-center p-3 bg-[#1F2229] rounded-lg">
                   <span className="text-2xl font-bold font-mono text-white">{node.estimatedHours}</span>
-                  <span className="text-xs text-[#A1A1AA] block mt-1">Estimated</span>
+                  <span className="text-xs text-[#A9A39A] block mt-1">Estimated</span>
                 </div>
-                <div className="text-center p-3 bg-[#18181B] rounded-lg">
+                <div className="text-center p-3 bg-[#1F2229] rounded-lg">
                   <span className="text-2xl font-bold font-mono text-green-400">{progressPercent}%</span>
-                  <span className="text-xs text-[#A1A1AA] block mt-1">Progress</span>
+                  <span className="text-xs text-[#A9A39A] block mt-1">Progress</span>
                 </div>
               </div>
               <ProgressBar value={progressPercent} max={100} showLabel={true} />
@@ -252,7 +252,7 @@ export default function TopicDetails() {
           <Card variant="glass">
             <CardHeader className="flex flex-row justify-between items-center">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-[#38BDF8]" /> Study Notes
+                <BookOpen className="w-5 h-5 text-[#C8BFAF]" /> Study Notes
               </CardTitle>
               <Button variant="primary" size="sm" onClick={handleSaveNotes}>
                 <Save className="w-3.5 h-3.5 mr-1" /> Save
@@ -263,7 +263,7 @@ export default function TopicDetails() {
                 value={notesText}
                 onChange={(e) => setNotesText(e.target.value)}
                 placeholder="Write your notes here... LaTeX syntax is supported for mathematics (e.g. $$dS_t = \mu S_t dt + \sigma S_t dW_t$$)"
-                className="w-full min-h-[200px] bg-[#0d0e12] border border-[#27272A] p-4 rounded-md text-sm text-[#FAFAFA] font-mono focus:outline-none focus:border-[#38BDF8] leading-relaxed resize-y"
+                className="w-full min-h-[200px] bg-[#0B0C10] border border-[#2A2E36] p-4 rounded-md text-sm text-[#F4F1EA] font-mono focus:outline-none focus:border-[#C8BFAF] leading-relaxed resize-y"
               />
             </CardContent>
           </Card>
@@ -304,20 +304,20 @@ export default function TopicDetails() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-[#A1A1AA]">Mastery</span>
+                  <span className="text-xs text-[#A9A39A]">Mastery</span>
                   <span className="text-xs font-mono text-white">{masteryPercent}%</span>
                 </div>
                 <ProgressBar value={masteryPercent} max={100} size="md" showLabel={false} />
-                <div className="flex justify-between items-center pt-2 border-t border-[#27272A]/50">
-                  <span className="text-xs text-[#A1A1AA]">Status</span>
+                <div className="flex justify-between items-center pt-2 border-t border-[#2A2E36]/50">
+                  <span className="text-xs text-[#A9A39A]">Status</span>
                   {getStatusBadge(node.status)}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-[#A1A1AA]">Prerequisites</span>
+                  <span className="text-xs text-[#A9A39A]">Prerequisites</span>
                   <span className="text-xs font-mono text-white">{node.prerequisites.length}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-[#A1A1AA]">Resources</span>
+                  <span className="text-xs text-[#A9A39A]">Resources</span>
                   <span className="text-xs font-mono text-white">{node.resources.length}</span>
                 </div>
               </div>
@@ -327,16 +327,16 @@ export default function TopicDetails() {
           <Card variant="glass">
             <CardHeader>
               <CardTitle className="text-base font-bold text-white flex items-center gap-2">
-                <FolderOpen className="w-4 h-4 text-[#38BDF8]" /> Curated Resources
+                <FolderOpen className="w-4 h-4 text-[#C8BFAF]" /> Curated Resources
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {node.resources.length > 0 ? (
                 node.resources.map((res) => (
-                  <div key={res.id} className="p-3 bg-[#0d0e12] border border-[#27272A] rounded flex justify-between items-start gap-2">
+                  <div key={res.id} className="p-3 bg-[#0B0C10] border border-[#2A2E36] rounded flex justify-between items-start gap-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#27272A] text-[#38BDF8] rounded uppercase">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#2A2E36] text-[#C8BFAF] rounded uppercase">
                           {res.type}
                         </span>
                         <Badge status={res.status === 'Completed' ? 'success' : 'default'} variant="outline" className="text-[9px]">
@@ -345,7 +345,7 @@ export default function TopicDetails() {
                       </div>
                       <h4 className="text-xs font-semibold text-white truncate">{res.title}</h4>
                       {res.url && (
-                        <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#38BDF8] hover:underline block mt-0.5">
+                        <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#C8BFAF] hover:underline block mt-0.5">
                           {res.url}
                         </a>
                       )}
@@ -371,10 +371,10 @@ export default function TopicDetails() {
                   </div>
                 ))
               ) : (
-                <div className="text-xs text-[#A1A1AA] py-4 text-center">No resources added yet.</div>
+                <div className="text-xs text-[#A9A39A] py-4 text-center">No resources added yet.</div>
               )}
               {showAddResource ? (
-                <form onSubmit={handleAddResource} className="space-y-2 pt-2 border-t border-[#27272A]/50">
+                <form onSubmit={handleAddResource} className="space-y-2 pt-2 border-t border-[#2A2E36]/50">
                   <Select value={newResourceType} onChange={(e) => setNewResourceType(e.target.value)}>
                     <option value="Book">Book</option>
                     <option value="Video">Video</option>
@@ -412,7 +412,7 @@ export default function TopicDetails() {
             <CardContent className="space-y-4">
               {parentNodes.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-bold flex items-center gap-1">
+                  <span className="text-[10px] text-[#A9A39A] uppercase tracking-wider font-bold flex items-center gap-1">
                     <ArrowLeft className="w-3 h-3" /> Prerequisites
                   </span>
                   <div className="space-y-1">
@@ -420,7 +420,7 @@ export default function TopicDetails() {
                       <Link
                         key={parent.id}
                         to={`/topic/${parent.id}`}
-                        className="flex items-center gap-2 text-xs text-[#38BDF8] hover:underline py-1"
+                        className="flex items-center gap-2 text-xs text-[#C8BFAF] hover:underline py-1"
                       >
                         <Badge status={parent.status === 'COMPLETED' || parent.status === 'MASTERED' ? 'success' : 'default'} variant="outline" className="text-[9px]">
                           {parent.status}
@@ -434,7 +434,7 @@ export default function TopicDetails() {
 
               {childNodes.length > 0 && (
                 <div className="space-y-1.5">
-                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-bold flex items-center gap-1">
+                  <span className="text-[10px] text-[#A9A39A] uppercase tracking-wider font-bold flex items-center gap-1">
                     <ArrowRight className="w-3 h-3" /> Unlocks Next
                   </span>
                   <div className="space-y-1">
@@ -442,7 +442,7 @@ export default function TopicDetails() {
                       <Link
                         key={child.id}
                         to={`/topic/${child.id}`}
-                        className="flex items-center gap-2 text-xs text-[#38BDF8] hover:underline py-1"
+                        className="flex items-center gap-2 text-xs text-[#C8BFAF] hover:underline py-1"
                       >
                         <Badge status={child.status === 'COMPLETED' || child.status === 'MASTERED' ? 'success' : child.status === 'LOCKED' ? 'error' : 'default'} variant="outline" className="text-[9px]">
                           {child.status}
@@ -455,7 +455,7 @@ export default function TopicDetails() {
               )}
 
               {parentNodes.length === 0 && childNodes.length === 0 && (
-                <div className="text-xs text-[#A1A1AA] py-4 text-center">No dependencies</div>
+                <div className="text-xs text-[#A9A39A] py-4 text-center">No dependencies</div>
               )}
             </CardContent>
           </Card>

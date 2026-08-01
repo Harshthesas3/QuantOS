@@ -216,13 +216,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-4xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <SettingsIcon className="w-7 h-7 text-[#38BDF8]" />
+          <SettingsIcon className="w-7 h-7 text-[#C8BFAF]" />
           Settings
         </h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">Configure your workspace and manage data.</p>
+        <p className="text-sm text-[#A9A39A] mt-1">Configure your workspace and manage data.</p>
       </header>
 
       {persistenceStatus !== 'ready' && (
@@ -232,7 +232,7 @@ export default function Settings() {
               <AlertTriangle className="w-4 h-4" />
               {persistenceStatus === 'failed' ? 'Local persistence failed' : 'Checking local persistence'}
             </div>
-            <p className="text-xs text-[#A1A1AA]">
+            <p className="text-xs text-[#A9A39A]">
               {persistenceStatus === 'failed'
                 ? persistenceReason ?? 'The SQLite database could not be opened during startup.'
                 : 'Opening the SQLite database and syncing local stores.'}
@@ -244,14 +244,14 @@ export default function Settings() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <User className="w-4 h-4 text-[#38BDF8]" /> Account
+            <User className="w-4 h-4 text-[#C8BFAF]" /> Account
           </CardTitle>
           <CardDescription>Signed in as {user?.username ?? 'unknown user'}.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleChangePassword} className="space-y-3 max-w-md">
             <div>
-              <label htmlFor="settings-current-pw" className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block mb-1">
+              <label htmlFor="settings-current-pw" className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block mb-1">
                 Current password
               </label>
               <input
@@ -259,13 +259,13 @@ export default function Settings() {
                 type="password"
                 value={currentPw}
                 onChange={(e) => setCurrentPw(e.target.value)}
-                className="w-full bg-[#0d0e12] border border-[#27272A] px-3 py-2 rounded text-sm text-white focus:outline-none focus:border-[#38BDF8]"
+                className="w-full bg-[#0B0C10] border border-[#2A2E36] px-3 py-2 rounded text-sm text-white focus:outline-none focus:border-[#C8BFAF]"
                 autoComplete="current-password"
                 required
               />
             </div>
             <div>
-              <label htmlFor="settings-new-pw" className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block mb-1">
+              <label htmlFor="settings-new-pw" className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block mb-1">
                 New password
               </label>
               <input
@@ -273,7 +273,7 @@ export default function Settings() {
                 type="password"
                 value={newPw}
                 onChange={(e) => setNewPw(e.target.value)}
-                className="w-full bg-[#0d0e12] border border-[#27272A] px-3 py-2 rounded text-sm text-white focus:outline-none focus:border-[#38BDF8]"
+                className="w-full bg-[#0B0C10] border border-[#2A2E36] px-3 py-2 rounded text-sm text-white focus:outline-none focus:border-[#C8BFAF]"
                 autoComplete="new-password"
                 minLength={6}
                 required
@@ -283,7 +283,7 @@ export default function Settings() {
               <Lock className="w-3.5 h-3.5" /> {pwBusy ? 'Saving...' : 'Change password'}
             </Button>
           </form>
-          <div className="mt-4 pt-4 border-t border-[#27272A]/50">
+          <div className="mt-4 pt-4 border-t border-[#2A2E36]/50">
             <Button
               type="button"
               variant="ghost"
@@ -306,26 +306,26 @@ export default function Settings() {
           <CardDescription>Manage your workspace and notification settings.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-between items-center py-3 border-b border-[#27272A]/50">
+          <div className="flex justify-between items-center py-3 border-b border-[#2A2E36]/50">
             <div className="flex items-center gap-3">
-              {theme === 'dark' ? <Moon className="w-5 h-5 text-[#A1A1AA]" /> : <Sun className="w-5 h-5 text-[#A1A1AA]" />}
+              {theme === 'dark' ? <Moon className="w-5 h-5 text-[#A9A39A]" /> : <Sun className="w-5 h-5 text-[#A9A39A]" />}
               <span className="text-sm font-medium text-white">Theme</span>
             </div>
             <select
               value={theme}
               onChange={(e) => setTheme(e.target.value as Theme)}
               aria-label="Theme"
-              className="bg-[#0d0e12] border border-[#27272A] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#38BDF8]"
+              className="bg-[#0B0C10] border border-[#2A2E36] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#C8BFAF]"
             >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
             </select>
           </div>
 
-          <div className="flex justify-between items-center py-3 border-b border-[#27272A]/50">
+          <div className="flex justify-between items-center py-3 border-b border-[#2A2E36]/50">
             <div>
               <span className="text-sm font-medium text-white">In-app notifications</span>
-              <p className="text-xs text-[#A1A1AA] mt-1">Show study reminders and progress toasts.</p>
+              <p className="text-xs text-[#A9A39A] mt-1">Show study reminders and progress toasts.</p>
             </div>
             <button
               type="button"
@@ -333,7 +333,7 @@ export default function Settings() {
               aria-checked={notifications}
               onClick={() => setNotifications((v) => !v)}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                notifications ? 'bg-[#38BDF8]' : 'bg-[#27272A]'
+                notifications ? 'bg-[#C8BFAF]' : 'bg-[#2A2E36]'
               }`}
             >
               <span
@@ -344,16 +344,16 @@ export default function Settings() {
             </button>
           </div>
 
-          <div className="flex justify-between items-center py-3 border-b border-[#27272A]/50">
+          <div className="flex justify-between items-center py-3 border-b border-[#2A2E36]/50">
             <div className="space-y-1">
               <span className="text-sm font-medium text-white">Daily reminder time</span>
-              <p className="text-xs text-[#A1A1AA]">Used by future scheduled reminders.</p>
+              <p className="text-xs text-[#A9A39A]">Used by future scheduled reminders.</p>
             </div>
             <input
               type="time"
               value={dailyReminders}
               onChange={(e) => setDailyReminders(e.target.value)}
-              className="bg-[#0d0e12] border border-[#27272A] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#38BDF8]"
+              className="bg-[#0B0C10] border border-[#2A2E36] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#C8BFAF]"
             />
           </div>
         </CardContent>
@@ -402,11 +402,11 @@ export default function Settings() {
             </div>
           )}
 
-          <div className="pt-4 border-t border-[#27272A]/50 space-y-3">
+          <div className="pt-4 border-t border-[#2A2E36]/50 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium text-white">Reset All Progress</span>
-                <p className="text-xs text-[#A1A1AA] mt-1">
+                <p className="text-xs text-[#A9A39A] mt-1">
                   Permanently delete all curriculum data, tasks, logs, and flashcards.
                 </p>
               </div>
@@ -433,7 +433,7 @@ export default function Settings() {
                 onChange={(e) => setResetConfirm(e.target.value)}
                 placeholder="Type RESET to confirm"
                 aria-label="Type RESET to confirm"
-                className="w-full bg-[#0d0e12] border border-[#27272A] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#38BDF8]"
+                className="w-full bg-[#0B0C10] border border-[#2A2E36] px-3 py-1.5 rounded text-sm text-white focus:outline-none focus:border-[#C8BFAF]"
               />
             )}
           </div>
@@ -443,41 +443,41 @@ export default function Settings() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-[#38BDF8]" /> Database Information
+            <Database className="w-5 h-5 text-[#C8BFAF]" /> Database Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Storage Engine</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Storage Engine</span>
               <span className="text-white font-mono">SQLite (better-sqlite3)</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">LocalStorage Size</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">LocalStorage Size</span>
               <span className="text-white font-mono">~{getStorageSize()} KB</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Curriculum Nodes</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Curriculum Nodes</span>
               <span className="text-white font-mono">{Object.keys(nodes).length}</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Daily Tasks</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Daily Tasks</span>
               <span className="text-white font-mono">{Object.keys(tasks).length}</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Study Logs</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Study Logs</span>
               <span className="text-white font-mono">{Object.keys(logs).length}</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Flashcards</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Flashcards</span>
               <span className="text-white font-mono">{Object.keys(cards).length}</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">Active Timer</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">Active Timer</span>
               <span className="text-white font-mono">{activeTimer ? 'Running' : 'Idle'}</span>
             </div>
             <div>
-              <span className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block">User</span>
+              <span className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block">User</span>
               <span className="text-white font-mono">{user?.username || 'Not signed in'}</span>
             </div>
           </div>

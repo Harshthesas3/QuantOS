@@ -4,16 +4,16 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from '@radix-ui/react-slot'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#38BDF8] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C8BFAF] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C10] disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        primary: 'bg-[#38BDF8] text-[#0D0E12] hover:bg-[#38BDF8]/90',
-        secondary: 'bg-[#27272A] text-[#FAFAFA] border border-[#27272A] hover:bg-[#3F3F46]',
-        ghost: 'text-[#A1A1AA] hover:bg-[#27272A] hover:text-[#FAFAFA]',
-        destructive: 'bg-red-500/10 text-red-400 border border-red-500/30 hover:bg-red-500/20',
-        info: 'bg-[#38BDF8]/10 text-[#38BDF8] border border-[#38BDF8]/30 hover:bg-[#38BDF8]/20',
-        link: 'text-[#38BDF8] underline-offset-2 hover:underline',
+        primary: 'bg-[#C8BFAF] text-[#0B0C10] hover:bg-[#C8BFAF]/85',
+        secondary: 'bg-[#2A2E36] text-[#F4F1EA] border border-[#2A2E36] hover:bg-[#3A3F46]',
+        ghost: 'text-[#A9A39A] hover:bg-white/5 hover:text-[#F4F1EA]',
+        destructive: 'bg-[#D98A8A]/10 text-[#D98A8A] border border-[#D98A8A]/30 hover:bg-[#D98A8A]/20',
+        info: 'bg-[#A8C69F]/10 text-[#A8C69F] border border-[#A8C69F]/30 hover:bg-[#A8C69F]/20',
+        link: 'text-[#C8BFAF] underline-offset-2 hover:underline',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

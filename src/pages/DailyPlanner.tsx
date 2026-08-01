@@ -125,14 +125,14 @@ export default function DailyPlanner() {
   }
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A] flex justify-between items-end">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36] flex justify-between items-end">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Calendar className="w-7 h-7 text-[#38BDF8]" />
+            <Calendar className="w-7 h-7 text-[#C8BFAF]" />
             Daily Planner
           </h1>
-          <p className="text-sm text-[#A1A1AA] mt-1">Manage daily objectives, track time, and review flashcards.</p>
+          <p className="text-sm text-[#A9A39A] mt-1">Manage daily objectives, track time, and review flashcards.</p>
         </div>
         <Button onClick={handleStartRevision} variant="secondary" className="!text-xs" disabled={dueCards.length === 0}>
             Review Due Cards ({dueCards.length})
@@ -140,15 +140,15 @@ export default function DailyPlanner() {
       </header>
 
       {activeTimer && (
-        <Card variant="glass" className="border-[#38BDF8]/40">
+        <Card variant="glass" className="border-[#C8BFAF]/40">
           <CardContent className="pt-4">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-white text-sm font-medium">
                   Studying: {runningTask?.title || 'Unknown task'}
                 </CardTitle>
-                <CardDescription className="text-[#A1A1AA] mt-1">
-                  Elapsed: <span className="font-mono text-[#38BDF8]">{formatTime(elapsedSeconds)}</span>
+                <CardDescription className="text-[#A9A39A] mt-1">
+                  Elapsed: <span className="font-mono text-[#C8BFAF]">{formatTime(elapsedSeconds)}</span>
                 </CardDescription>
               </div>
               <Button onClick={() => stopTimer()} variant="destructive" size="sm">
@@ -161,7 +161,7 @@ export default function DailyPlanner() {
       )}
 
       {revisionMode && currentCard && (
-        <Card variant="glass" className="border-[#38BDF8]/40">
+        <Card variant="glass" className="border-[#C8BFAF]/40">
           <CardContent className="pt-6">
             <div className="flex justify-between items-center">
               <Badge status="info" variant="solid">
@@ -169,7 +169,7 @@ export default function DailyPlanner() {
               </Badge>
               <button
                 onClick={() => { setRevisionMode(false); setCurrentCard(null) }}
-                className="text-xs text-[#A1A1AA] hover:text-[#FAFAFA]"
+                className="text-xs text-[#A9A39A] hover:text-[#F4F1EA]"
               >
                 Exit Session
               </button>
@@ -178,7 +178,7 @@ export default function DailyPlanner() {
             <div className="space-y-4 text-center py-6">
               <h3 className="text-xl font-bold text-white">{currentCard.prompt}</h3>
               {showAnswer ? (
-                <div className="p-4 bg-[#0d0e12] rounded border border-[#27272A] font-mono text-sm text-green-400 mt-4">
+                <div className="p-4 bg-[#0B0C10] rounded border border-[#2A2E36] font-mono text-sm text-green-400 mt-4">
                   {currentCard.answer}
                 </div>
               ) : (
@@ -190,13 +190,13 @@ export default function DailyPlanner() {
 
             {showAnswer && (
               <div className="space-y-3">
-                <span className="text-xs text-[#A1A1AA] block text-center">Rate your recall quality (0: Forgot, 5: Perfect)</span>
+                <span className="text-xs text-[#A9A39A] block text-center">Rate your recall quality (0: Forgot, 5: Perfect)</span>
                 <div className="flex justify-center gap-2">
                   {[0, 1, 2, 3, 4, 5].map((score) => (
                     <button
                       key={score}
                       onClick={() => handleReviewScore(score)}
-                      className="px-4 py-2 bg-[#27272A] hover:bg-[#38BDF8] hover:text-[#0D0E12] border border-[#27272A] rounded text-xs font-bold font-mono transition-colors"
+                      className="px-4 py-2 bg-[#2A2E36] hover:bg-[#C8BFAF] hover:text-[#0B0C10] border border-[#2A2E36] rounded text-xs font-bold font-mono transition-colors"
                     >
                       {score}
                     </button>
@@ -251,7 +251,7 @@ export default function DailyPlanner() {
 
                     if (editingTask === task.id) {
                       return (
-                        <li key={task.id} className="p-4 bg-[#0d0e12] border border-[#27272A] rounded-lg space-y-3">
+                        <li key={task.id} className="p-4 bg-[#0B0C10] border border-[#2A2E36] rounded-lg space-y-3">
                           <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="!text-sm" />
                           <div className="flex gap-2 items-center">
                             <Input type="number" value={editEst} onChange={(e) => setEditEst(parseInt(e.target.value) || 30)} className="w-20 !text-xs" min="1" />
@@ -265,7 +265,7 @@ export default function DailyPlanner() {
                             value={editNotes}
                             onChange={(e) => setEditNotes(e.target.value)}
                             placeholder="Task notes..."
-                            className="w-full min-h-[60px] bg-[#121318] border border-[#27272A] p-2 rounded text-xs text-white placeholder-[#A1A1AA] focus:outline-none focus:border-[#38BDF8] resize-y"
+                            className="w-full min-h-[60px] bg-[#111318] border border-[#2A2E36] p-2 rounded text-xs text-white placeholder-[#A9A39A] focus:outline-none focus:border-[#C8BFAF] resize-y"
                           />
                           <div className="flex gap-2">
                             <Button size="sm" variant="secondary" onClick={() => handleSaveEdit(task.id)}><Save className="w-3 h-3" /></Button>
@@ -276,37 +276,37 @@ export default function DailyPlanner() {
                     }
 
                     return (
-                      <li key={task.id} className="p-4 bg-[#0d0e12] border border-[#27272A] rounded-lg">
+                      <li key={task.id} className="p-4 bg-[#0B0C10] border border-[#2A2E36] rounded-lg">
                         <div className="flex items-center gap-3">
                           <button
                             onClick={() => toggleTaskCompleted(task.id)}
                             className={`w-5 h-5 border rounded flex items-center justify-center transition-colors flex-shrink-0 ${
-                              task.completed ? 'bg-green-600 border-green-600 text-white' : 'border-[#27272A]'
+                              task.completed ? 'bg-green-600 border-green-600 text-white' : 'border-[#2A2E36]'
                             }`}
                           >
                             {task.completed && <CheckCircle className="w-3.5 h-3.5 fill-white" />}
                           </button>
                           <div className="flex-1 min-w-0">
-                            <span className={`text-sm ${task.completed ? 'line-through text-[#A1A1AA]' : 'text-white'}`}>{task.title}</span>
+                            <span className={`text-sm ${task.completed ? 'line-through text-[#A9A39A]' : 'text-white'}`}>{task.title}</span>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${priorityClass}`}>{task.priority}</span>
                               {task.estimatedMinutes && (
-                                <span className="text-[10px] text-[#A1A1AA] font-mono">{task.estimatedMinutes}m est.</span>
+                                <span className="text-[10px] text-[#A9A39A] font-mono">{task.estimatedMinutes}m est.</span>
                               )}
-                              <span className="text-[10px] text-[#A1A1AA] font-mono">{task.actualMinutes}m actual</span>
+                              <span className="text-[10px] text-[#A9A39A] font-mono">{task.actualMinutes}m actual</span>
                             </div>
                             {task.notes && (
-                              <p className="text-[10px] text-[#71717A] mt-1 line-clamp-1">{task.notes}</p>
+                              <p className="text-[10px] text-[#7C7870] mt-1 line-clamp-1">{task.notes}</p>
                             )}
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <button onClick={() => reorderTasks(task.id, 'up')} className="p-1 text-[#A1A1AA] hover:text-white disabled:opacity-30" disabled={taskPage === 0 && paginatedTasks.indexOf(task) === 0}>
+                            <button onClick={() => reorderTasks(task.id, 'up')} className="p-1 text-[#A9A39A] hover:text-white disabled:opacity-30" disabled={taskPage === 0 && paginatedTasks.indexOf(task) === 0}>
                               <ArrowUp className="w-3 h-3" />
                             </button>
-                            <button onClick={() => reorderTasks(task.id, 'down')} className="p-1 text-[#A1A1AA] hover:text-white disabled:opacity-30" disabled={taskPage === totalPages - 1 && paginatedTasks.indexOf(task) === paginatedTasks.length - 1}>
+                            <button onClick={() => reorderTasks(task.id, 'down')} className="p-1 text-[#A9A39A] hover:text-white disabled:opacity-30" disabled={taskPage === totalPages - 1 && paginatedTasks.indexOf(task) === paginatedTasks.length - 1}>
                               <ArrowDown className="w-3 h-3" />
                             </button>
-                            <button onClick={() => handleStartEdit(task)} className="p-1 text-[#A1A1AA] hover:text-white" title="Edit">
+                            <button onClick={() => handleStartEdit(task)} className="p-1 text-[#A9A39A] hover:text-white" title="Edit">
                               <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             {isRunning ? (
@@ -314,7 +314,7 @@ export default function DailyPlanner() {
                                 <Square className="w-3.5 h-3.5 fill-current" />
                               </button>
                             ) : (
-                              <button onClick={() => startTimer(task.id)} className="p-1 text-[#A1A1AA] hover:text-white" title="Start timer">
+                              <button onClick={() => startTimer(task.id)} className="p-1 text-[#A9A39A] hover:text-white" title="Start timer">
                                 <Play className="w-3.5 h-3.5 fill-current" />
                               </button>
                             )}
@@ -328,12 +328,12 @@ export default function DailyPlanner() {
                   })}
                 </ul>
               ) : (
-                <div className="text-sm text-[#A1A1AA] py-8 text-center">No tasks for today. Add one above!</div>
+                <div className="text-sm text-[#A9A39A] py-8 text-center">No tasks for today. Add one above!</div>
               )}
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-2 border-t border-[#27272A]/50">
-                  <span className="text-xs text-[#A1A1AA]">Page {taskPage + 1} of {totalPages}</span>
+                <div className="flex items-center justify-between pt-2 border-t border-[#2A2E36]/50">
+                  <span className="text-xs text-[#A9A39A]">Page {taskPage + 1} of {totalPages}</span>
                   <div className="flex gap-2">
                     <Button size="sm" variant="ghost" onClick={() => setTaskPage(p => Math.max(0, p - 1))} disabled={taskPage === 0}>
                       <ChevronLeft className="w-3 h-3" />
@@ -355,23 +355,23 @@ export default function DailyPlanner() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold">Focus Rating (1-5)</label>
+                <label className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold">Focus Rating (1-5)</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((stars) => (
                     <button key={stars} onClick={() => setFocusRating(stars)} className="p-1">
-                      <Star className={`w-6 h-6 ${stars <= focusRating ? 'text-[#38BDF8] fill-[#38BDF8]' : 'text-[#27272A]'}`} />
+                      <Star className={`w-6 h-6 ${stars <= focusRating ? 'text-[#C8BFAF] fill-[#C8BFAF]' : 'text-[#2A2E36]'}`} />
                     </button>
                   ))}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold">Qualitative reflection notes</label>
+                <label className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold">Qualitative reflection notes</label>
                 <textarea
                   value={reflectionText}
                   onChange={(e) => setReflectionText(e.target.value)}
                   placeholder="Log your state, obstacles faced, or breakthroughs achieved today..."
-                  className="w-full min-h-[120px] bg-[#0d0e12] border border-[#27272A] p-3 rounded text-xs text-white placeholder-[#A1A1AA] focus:outline-none focus:border-[#38BDF8]"
+                  className="w-full min-h-[120px] bg-[#0B0C10] border border-[#2A2E36] p-3 rounded text-xs text-white placeholder-[#A9A39A] focus:outline-none focus:border-[#C8BFAF]"
                 />
               </div>
 

@@ -1,4 +1,4 @@
-﻿import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 
 interface Props {
   children: ReactNode
@@ -30,19 +30,19 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className="min-h-screen bg-[#0D0E12] text-[#FAFAFA] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[#0B0C10] text-[#F4F1EA] flex items-center justify-center p-6">
           <div className="max-w-md text-center space-y-4">
             <h1 className="text-2xl font-bold">Something went wrong.</h1>
-            <p className="text-sm text-[#A1A1AA]">
+            <p className="text-sm text-[#A9A39A]">
               The application hit an unexpected error. Your data is safe in the
               local SQLite database.
             </p>
-            <pre className="text-xs text-[#71717A] bg-[#121318] border border-[#27272A] rounded p-3 overflow-auto text-left">
+            <pre className="text-xs text-[#7C7870] bg-[#111318] border border-[#2A2E36] rounded p-3 overflow-auto text-left">
               {this.state.error.message}
             </pre>
             <button
               onClick={this.handleReload}
-              className="px-4 py-2 bg-[#38BDF8] text-[#0D0E12] font-semibold rounded hover:bg-[#38BDF8]/90"
+              className="px-4 py-2 bg-[#C8BFAF] text-[#0B0C10] font-semibold rounded hover:bg-[#C8BFAF]/90"
             >
               Reload workspace
             </button>

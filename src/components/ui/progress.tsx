@@ -10,7 +10,7 @@ export interface ProgressBarProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const variantColors: Record<string, string> = {
-  default: 'bg-[#38BDF8]',
+  default: 'bg-[#C8BFAF]',
   success: 'bg-green-500',
   info: 'bg-blue-500',
   warning: 'bg-yellow-500',
@@ -33,13 +33,13 @@ const ProgressBar = React.forwardRef<HTMLDivElement, ProgressBarProps>(
     return (
       <div ref={ref} className={clsx("w-full", className)} {...props}>
         {labelValue && (
-          <div className="flex justify-between text-xs text-[#A1A1AA] mb-1">
+          <div className="flex justify-between text-xs text-[#A9A39A] mb-1">
             <span>{labelValue}</span>
           </div>
         )}
         <div
           className={clsx(
-            'w-full bg-[#18181B] rounded-full overflow-hidden border border-[#27272A]',
+            'w-full bg-[#1F2229] rounded-full overflow-hidden border border-[#2A2E36]',
             heightClass
           )}
         >

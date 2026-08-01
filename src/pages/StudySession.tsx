@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Clock3, Play, Pause, Square, Shield, Sparkles, PencilLine, Quote, Target } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Clock3, Play, Pause, Square, Shield, Sparkles, PencilLine, Quote, Target, RefreshCw, Info, Compass } from 'lucide-react'
 import { useCurriculumStore } from '../stores/curriculumStore'
 import { useStudySessionStore } from '../stores/studySessionStore'
 import { useStudySessionTicker, formatSessionTime } from '../hooks/useStudySessionTicker'
@@ -36,6 +36,11 @@ export default function StudySession() {
   const activeSession = activeSessionId ? sessions[activeSessionId] ?? null : null
   const topicNode = topicId ? nodes[topicId] ?? null : null
   const currentSession = activeSession ?? (topicId ? Object.values(sessions).find((session) => session.topicId === topicId) ?? null : null)
+
+  // A session that belongs to a different topic is still controllable; the
+  // page surfaces it instead of silently disabling every control.
+  const foreignSession = topicNode && activeSession && activeSession.topicId !== topicNode.id ? activeSession : null
+  const foreignTopic = foreignSession ? nodes[foreignSession.topicId] ?? null : null
 
   // Session goal (minutes). The session may carry a goalMinutes; otherwise the
   // user's countdown target acts as the in-memory goal.
@@ -84,7 +89,7 @@ export default function StudySession() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [activeSession, cancelSession, finishSession, navigate, pauseSession, resumeSession, startSession, targetMinutes, topicNode])
 
-  const quote = useMemo(() => {
+  const [quote, setQuote] = useState<QuoteEntry>(() => {
     const source = quotes as QuoteEntry[]
     const seed = new Date().toISOString().slice(0, 10)
     let hash = 0
@@ -92,9 +97,12 @@ export default function StudySession() {
       hash = (hash * 31 + char.charCodeAt(0)) >>> 0
     }
     return source[hash % source.length]
-  }, [])
+  })
+  const refreshQuote = () => {
+    const source = quotes as QuoteEntry[]
+    setQuote(source[Math.floor(Math.random() * source.length)])
+  }
 
-  const isControlled = !topicNode || !activeSession || activeSession.topicId === topicNode.id
   const displaySeconds = currentSession ? (activeSession ? elapsedSeconds : currentSession.elapsedSeconds) : 0
   const countdownSeconds = Math.max(0, targetMinutes * 60 - displaySeconds)
   const overtimeSeconds = Math.max(0, displaySeconds - targetMinutes * 60)
@@ -215,11 +223,26 @@ export default function StudySession() {
                 {mode === 'countdown' && overtimeSeconds > 0 && (
                   <p className="text-sm text-[#D9B98A]">Overtime {formatSessionTime(overtimeSeconds)}</p>
                 )}
+                {foreignSession && (
+                  <div className="flex items-center gap-2 rounded-2xl border border-[#D9B98A]/25 bg-[#D9B98A]/10 px-4 py-3 text-sm text-[#D9B98A] text-left">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>
+                      A session for “{foreignTopic?.title ?? 'another topic'}” is still running — finish or
+                      cancel it to start a session for {topicNode?.title}.
+                    </span>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   {!activeSession ? (
-                    <Button className="px-6" onClick={() => topicNode && startSession(topicNode.id, topicNode.phaseId, targetMinutes)} disabled={!isControlled || !topicNode}>
-                      <Play className="w-4 h-4 mr-2" /> Start session
-                    </Button>
+                    !topicNode ? (
+                      <Button className="px-6" onClick={() => navigate('/roadmap')}>
+                        <Compass className="w-4 h-4 mr-2" /> Browse the roadmap
+                      </Button>
+                    ) : (
+                      <Button className="px-6" onClick={() => topicNode && startSession(topicNode.id, topicNode.phaseId, targetMinutes)}>
+                        <Play className="w-4 h-4 mr-2" /> Start session
+                      </Button>
+                    )
                   ) : activeSession.status === 'active' ? (
                     <Button className="px-6" onClick={() => pauseSession()}>
                       <Pause className="w-4 h-4 mr-2" /> Pause
@@ -229,7 +252,7 @@ export default function StudySession() {
                       <Play className="w-4 h-4 mr-2" /> Resume
                     </Button>
                   )}
-                  <Button variant="secondary" className="px-6" onClick={() => finishSession(true)} disabled={!activeSession || !isControlled}>
+                  <Button variant="secondary" className="px-6" onClick={() => finishSession(true)} disabled={!activeSession}>
                     <CheckCircle2 className="w-4 h-4 mr-2" /> Finish
                   </Button>
                   <Button variant="destructive" className="px-6" onClick={() => {
@@ -237,7 +260,7 @@ export default function StudySession() {
                       cancelSession()
                       navigate(topicNode ? `/topic/${topicNode.id}` : '/')
                     }
-                  }} disabled={!activeSession || !isControlled}>
+                  }} disabled={!activeSession}>
                     <Square className="w-4 h-4 mr-2" /> Cancel
                   </Button>
                 </div>
@@ -275,17 +298,27 @@ export default function StudySession() {
                   rows={10}
                   placeholder="What did you notice? What needs to happen next?"
                   className="w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-[#F4F1EA] outline-none placeholder:text-[#6F736F] focus:border-[#C8BFAF]/50"
-                  disabled={!currentSession || !isControlled}
+                  disabled={!activeSession}
                 />
               </CardContent>
             </Card>
 
             <Card className="border-white/10 bg-[#111318]/85 shadow-[0_24px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#F4F1EA]">
-                  <Quote className="w-4 h-4 text-[#D9B98A]" /> Marcus Aurelius
-                </CardTitle>
-                <CardDescription className="text-[#A9A39A]">One reminder per day, selected from a local Meditations quote set.</CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <div className="space-y-1.5">
+                  <CardTitle className="flex items-center gap-2 text-[#F4F1EA]">
+                    <Quote className="w-4 h-4 text-[#D9B98A]" /> Marcus Aurelius
+                  </CardTitle>
+                  <CardDescription className="text-[#A9A39A]">One reminder per day, selected from a local Meditations quote set.</CardDescription>
+                </div>
+                <button
+                  type="button"
+                  onClick={refreshQuote}
+                  title="Get a new quote"
+                  className="group shrink-0 rounded-full border border-white/10 bg-white/5 p-2 text-[#A9A39A] transition-colors hover:border-[#D9B98A]/40 hover:text-[#D9B98A]"
+                >
+                  <RefreshCw className="w-4 h-4 transition-transform duration-300 group-active:rotate-180" />
+                </button>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="font-display text-sm leading-7 text-[#F4F1EA]">“{quote.text}”</p>

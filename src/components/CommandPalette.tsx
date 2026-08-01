@@ -90,9 +90,9 @@ export default function CommandPalette() {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh]">
-      <div className="w-full max-w-xl bg-[#121318] border border-[#27272A] rounded-lg shadow-2xl overflow-hidden flex flex-col">
-        <div className="flex items-center gap-3 px-4 border-b border-[#27272A] py-3.5">
-          <Search className="w-5 h-5 text-[#A1A1AA]" />
+      <div className="w-full max-w-xl bg-[#111318] border border-[#2A2E36] rounded-lg shadow-2xl overflow-hidden flex flex-col">
+        <div className="flex items-center gap-3 px-4 border-b border-[#2A2E36] py-3.5">
+          <Search className="w-5 h-5 text-[#A9A39A]" />
           <input
             type="text"
             placeholder="Type a command or study topic name..."
@@ -101,10 +101,10 @@ export default function CommandPalette() {
               setSearch(e.target.value)
               setSelectedIndex(0)
             }}
-            className="flex-1 bg-transparent text-sm text-white placeholder-[#A1A1AA] focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-white placeholder-[#A9A39A] focus:outline-none"
             autoFocus
           />
-          <kbd className="px-2 py-0.5 bg-[#27272A] text-[#A1A1AA] border border-[#27272A] rounded text-[10px] uppercase font-mono font-bold">
+          <kbd className="px-2 py-0.5 bg-[#2A2E36] text-[#A9A39A] border border-[#2A2E36] rounded text-[10px] uppercase font-mono font-bold">
             esc
           </kbd>
         </div>
@@ -125,14 +125,14 @@ export default function CommandPalette() {
                     setIsOpen(false)
                   }}
                   className={`w-full text-left px-3 py-2.5 rounded-md flex items-center justify-between text-xs transition-colors ${
-                    isActive ? 'bg-[#27272A] text-white' : 'text-[#A1A1AA] hover:bg-[#27272A]/40'
+                    isActive ? 'bg-[#2A2E36] text-white' : 'text-[#A9A39A] hover:bg-[#2A2E36]/40'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#38BDF8]' : 'text-[#A1A1AA]'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#C8BFAF]' : 'text-[#A9A39A]'}`} />
                     <div>
                       <span className="block text-white font-medium">{item.title}</span>
-                      <span className="text-[10px] text-[#A1A1AA] font-mono mt-0.5 block flex items-center gap-1">
+                      <span className="text-[10px] text-[#A9A39A] font-mono mt-0.5 block flex items-center gap-1">
                         {item.type}
                         {status && (
                           <Badge
@@ -158,7 +158,7 @@ export default function CommandPalette() {
                   </div>
 
                   {isActive && (
-                    <span className="flex items-center gap-1 text-[9px] text-[#38BDF8] font-bold font-mono">
+                    <span className="flex items-center gap-1 text-[9px] text-[#C8BFAF] font-bold font-mono">
                       select <CornerDownLeft className="w-3 h-3" />
                     </span>
                   )}
@@ -166,7 +166,7 @@ export default function CommandPalette() {
               )
             })
           ) : (
-            <div className="text-xs text-[#A1A1AA] text-center py-6">No matching queries found.</div>
+            <div className="text-xs text-[#A9A39A] text-center py-6">No matching queries found.</div>
           )}
         </div>
       </div>

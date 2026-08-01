@@ -8,9 +8,9 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', ...props }, ref) => {
     const variantClasses = {
-      default: 'bg-[#121318] border border-[#27272A]',
-      glass: 'bg-[#121318]/80 border border-[#27272A] backdrop-blur-sm',
-      compact: 'bg-[#121318] border border-[#27272A] p-4',
+      default: 'bg-[#111318] border border-[#2A2E36]',
+      glass: 'bg-[#111318]/80 border border-[#2A2E36] backdrop-blur-sm',
+      compact: 'bg-[#111318] border border-[#2A2E36] p-4',
     }
     return (
       <div
@@ -43,7 +43,7 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={clsx('text-lg font-bold text-white', className)}
+      className={clsx('text-lg font-bold text-[#F4F1EA]', className)}
       {...props}
     />
   )
@@ -54,7 +54,7 @@ const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
   ({ className, ...props }, ref) => (
     <p
       ref={ref}
-      className={clsx('text-sm text-[#A1A1AA]', className)}
+      className={clsx('text-sm text-[#A9A39A]', className)}
       {...props}
     />
   )
@@ -72,7 +72,7 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={clsx('flex items-center pt-4 border-t border-[#27272A]/50', className)}
+      className={clsx('flex items-center pt-4 border-t border-[#2A2E36]/50', className)}
       {...props}
     />
   )

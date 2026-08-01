@@ -58,19 +58,19 @@ export default function Resources() {
   const resourceStatuses = Array.from(new Set(resources.map((resource) => resource.status))).sort()
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <LibraryBig className="w-7 h-7 text-[#38BDF8]" />
+          <LibraryBig className="w-7 h-7 text-[#C8BFAF]" />
           Resources
         </h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">Browse every curated resource attached to the curriculum graph.</p>
+        <p className="text-sm text-[#A9A39A] mt-1">Browse every curated resource attached to the curriculum graph.</p>
       </header>
 
       <Card variant="glass">
         <CardContent className="pt-4 grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#A9A39A] absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -130,12 +130,12 @@ export default function Resources() {
                       href={resource.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#38BDF8] border border-[#38BDF8]/30 rounded-md hover:bg-[#38BDF8]/10"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#C8BFAF] border border-[#C8BFAF]/30 rounded-md hover:bg-[#C8BFAF]/10"
                     >
                       Open <ExternalLink className="w-3 h-3" />
                     </a>
                   ) : (
-                    <span className="text-xs text-[#A1A1AA]">No URL attached</span>
+                    <span className="text-xs text-[#A9A39A]">No URL attached</span>
                   )}
 
                   <Button
@@ -172,7 +172,7 @@ export default function Resources() {
         <EmptyState
           title="No resources match your filters"
           description="Clear the filters or add new resource links from a topic page."
-          icon={<LibraryBig className="w-6 h-6 text-[#A1A1AA]" />}
+          icon={<LibraryBig className="w-6 h-6 text-[#A9A39A]" />}
         />
       )}
     </div>

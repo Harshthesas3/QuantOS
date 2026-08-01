@@ -28,19 +28,19 @@ export default function Projects() {
   }, [nodes, search])
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <FolderKanban className="w-7 h-7 text-[#38BDF8]" />
+          <FolderKanban className="w-7 h-7 text-[#C8BFAF]" />
           Projects
         </h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">Portfolio workstreams tied to the final phase of the curriculum.</p>
+        <p className="text-sm text-[#A9A39A] mt-1">Portfolio workstreams tied to the final phase of the curriculum.</p>
       </header>
 
       <Card variant="glass">
         <CardContent className="pt-4">
           <div className="relative max-w-xl">
-            <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#A9A39A] absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -69,7 +69,7 @@ export default function Projects() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-sm text-[#A1A1AA] leading-relaxed">{project.description}</p>
+                  <p className="text-sm text-[#A9A39A] leading-relaxed">{project.description}</p>
                   <ProgressBar value={progress} max={100} size="sm" showLabel />
                   <div className="flex items-center gap-2 flex-wrap">
                     <Button
@@ -97,7 +97,7 @@ export default function Projects() {
                     </Button>
                     <Link
                       to={`/topic/${project.id}`}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#38BDF8] border border-[#38BDF8]/30 rounded-md hover:bg-[#38BDF8]/10"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#C8BFAF] border border-[#C8BFAF]/30 rounded-md hover:bg-[#C8BFAF]/10"
                     >
                       Open topic <ArrowRight className="w-3 h-3" />
                     </Link>
@@ -111,7 +111,7 @@ export default function Projects() {
         <EmptyState
           title="No projects match your search"
           description="Portfolio nodes live in the final curriculum phase. Clear the search to browse them."
-          icon={<FolderKanban className="w-6 h-6 text-[#A1A1AA]" />}
+          icon={<FolderKanban className="w-6 h-6 text-[#A9A39A]" />}
         />
       )}
     </div>

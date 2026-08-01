@@ -14,11 +14,11 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const statusColors: Record<StatusType, { bg: string; text: string; border: string }> = {
-  default: { bg: 'bg-[#27272A]/50', text: 'text-[#A1A1AA]', border: 'border-[#27272A]' },
+  default: { bg: 'bg-[#2A2E36]/50', text: 'text-[#A9A39A]', border: 'border-[#2A2E36]' },
   success: { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30' },
   warning: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', border: 'border-yellow-500/30' },
   error: { bg: 'bg-red-500/10', text: 'text-red-400', border: 'border-red-500/30' },
-  info: { bg: 'bg-[#38BDF8]/10', text: 'text-[#38BDF8]', border: 'border-[#38BDF8]/30' },
+  info: { bg: 'bg-[#C8BFAF]/10', text: 'text-[#C8BFAF]', border: 'border-[#C8BFAF]/30' },
 }
 
 const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(

@@ -15,7 +15,7 @@ const Separator = React.forwardRef<
     ref={ref}
     orientation={orientation}
     className={clsx(
-      'shrink-0 bg-[#27272A]',
+      'shrink-0 bg-[#2A2E36]',
       orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
       className
     )}

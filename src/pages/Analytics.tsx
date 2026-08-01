@@ -197,12 +197,12 @@ export default function Analytics() {
 
   const getHeatmapColor = (level: number) => {
     switch (level) {
-      case 0: return 'bg-[#18181B]'
-      case 1: return 'bg-[#27272A]'
-      case 2: return 'bg-[#3F3F46]'
+      case 0: return 'bg-[#1F2229]'
+      case 1: return 'bg-[#2A2E36]'
+      case 2: return 'bg-[#3A3F46]'
       case 3: return 'bg-[#52525B]'
-      case 4: return 'bg-[#38BDF8]/30'
-      default: return 'bg-[#18181B]'
+      case 4: return 'bg-[#C8BFAF]/30'
+      default: return 'bg-[#1F2229]'
     }
   }
 
@@ -221,7 +221,7 @@ export default function Analytics() {
     value: count
   }))
 
-  const COLORS = ['#38BDF8', '#71717A', '#52525B', '#27272A']
+  const COLORS = ['#C8BFAF', '#7C7870', '#52525B', '#2A2E36']
 
   const totalFlashcards = cardsList.length
   const dueToday = cardsList.filter(c => c.nextReviewDate <= today.toISOString().split('T')[0]).length
@@ -230,13 +230,13 @@ export default function Analytics() {
     : 0
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <Activity className="w-7 h-7 text-[#38BDF8]" />
+          <Activity className="w-7 h-7 text-[#C8BFAF]" />
           Analytics Dashboard
         </h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">Data-driven insights from your study patterns and progress.</p>
+        <p className="text-sm text-[#A9A39A] mt-1">Data-driven insights from your study patterns and progress.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -245,17 +245,17 @@ export default function Analytics() {
             <Flame className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Current Streak</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Current Streak</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{currentStreak} days</span>
           </div>
         </Card>
 
         <Card variant="glass" className="flex items-center gap-4 p-5">
-          <div className="p-3 bg-[#38BDF8]/10 text-[#38BDF8] rounded-lg">
+          <div className="p-3 bg-[#C8BFAF]/10 text-[#C8BFAF] rounded-lg">
             <Target className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Overall Progress</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Overall Progress</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{overallProgress}%</span>
           </div>
         </Card>
@@ -265,7 +265,7 @@ export default function Analytics() {
             <Zap className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Total Hours</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Total Hours</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{totalStudyHours.toFixed(1)}h</span>
           </div>
         </Card>
@@ -275,20 +275,20 @@ export default function Analytics() {
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Flashcards Active</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Flashcards Active</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{totalFlashcards}</span>
-            <span className="text-xs text-[#A1A1AA] block">{dueToday} due today · avg EF {avgEF.toFixed(1)}</span>
+            <span className="text-xs text-[#A9A39A] block">{dueToday} due today · avg EF {avgEF.toFixed(1)}</span>
           </div>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card variant="glass" className="flex items-center gap-4 p-5">
-          <div className="p-3 bg-[#38BDF8]/10 text-[#38BDF8] rounded-lg">
+          <div className="p-3 bg-[#C8BFAF]/10 text-[#C8BFAF] rounded-lg">
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Avg Session</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Avg Session</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(avgSessionMinutes)}</span>
           </div>
         </Card>
@@ -298,7 +298,7 @@ export default function Analytics() {
             <Timer className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Longest Session</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Longest Session</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(longestMinutes)}</span>
           </div>
         </Card>
@@ -308,7 +308,7 @@ export default function Analytics() {
             <Award className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">Longest Streak</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">Longest Streak</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{longestStreak} days</span>
           </div>
         </Card>
@@ -318,7 +318,7 @@ export default function Analytics() {
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-[#A1A1AA] font-semibold uppercase tracking-wider block">This Month</span>
+            <span className="text-xs text-[#A9A39A] font-semibold uppercase tracking-wider block">This Month</span>
             <span className="text-2xl font-bold font-mono mt-1 block">{formatMins(monthMinutes)}</span>
           </div>
         </Card>
@@ -328,7 +328,7 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#38BDF8]" /> Daily Study Hours (30 Days)
+              <Calendar className="w-5 h-5 text-[#C8BFAF]" /> Daily Study Hours (30 Days)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -337,15 +337,15 @@ export default function Analytics() {
                 <AreaChart data={dailyData}>
                   <defs>
                     <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#38BDF8" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#38BDF8" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#C8BFAF" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#C8BFAF" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                  <XAxis dataKey="date" stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#121318', borderColor: '#27272A', color: '#FAFAFA' }} />
-                  <Area type="monotone" dataKey="hours" stroke="#38BDF8" strokeWidth={2} fillOpacity={1} fill="url(#colorHours)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2E36" />
+                  <XAxis dataKey="date" stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#111318', borderColor: '#2A2E36', color: '#F4F1EA' }} />
+                  <Area type="monotone" dataKey="hours" stroke="#C8BFAF" strokeWidth={2} fillOpacity={1} fill="url(#colorHours)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -355,17 +355,17 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> Weekly Hours
+              <TrendingUp className="w-5 h-5 text-[#C8BFAF]" /> Weekly Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={weeklyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                  <XAxis dataKey="week" stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#121318', borderColor: '#27272A', color: '#FAFAFA' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2E36" />
+                  <XAxis dataKey="week" stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#111318', borderColor: '#2A2E36', color: '#F4F1EA' }} />
                   <Bar dataKey="hours" fill="#22C55E" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -376,17 +376,17 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#38BDF8]" /> Monthly Hours
+              <Layers className="w-5 h-5 text-[#C8BFAF]" /> Monthly Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                  <XAxis dataKey="month" stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <YAxis stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                  <Tooltip contentStyle={{ backgroundColor: '#121318', borderColor: '#27272A', color: '#FAFAFA' }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2A2E36" />
+                  <XAxis dataKey="month" stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#A9A39A" fontSize={10} tickLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#111318', borderColor: '#2A2E36', color: '#F4F1EA' }} />
                   <Bar dataKey="hours" fill="#F59E0B" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -397,15 +397,15 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Clock className="w-5 h-5 text-[#38BDF8]" /> This Week
+              <Clock className="w-5 h-5 text-[#C8BFAF]" /> This Week
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center py-8">
               <span className="text-5xl font-bold font-mono text-white">{formatMins(weekMinutes)}</span>
-              <span className="text-xs text-[#A1A1AA] block mt-2">studied this week</span>
+              <span className="text-xs text-[#A9A39A] block mt-2">studied this week</span>
             </div>
-            <div className="flex justify-between text-xs text-[#A1A1AA] pt-4 border-t border-[#27272A]/50">
+            <div className="flex justify-between text-xs text-[#A9A39A] pt-4 border-t border-[#2A2E36]/50">
               <span>Today: {formatMins(todayMinutes)}</span>
               <span>{metrics.activeDays} active day{metrics.activeDays !== 1 ? 's' : ''}</span>
               <span>{metrics.completedCount} completed</span>
@@ -418,7 +418,7 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[#38BDF8]" /> Hours Per Phase
+              <Layers className="w-5 h-5 text-[#C8BFAF]" /> Hours Per Phase
             </CardTitle>
             <CardDescription>Total study time recorded per curriculum phase</CardDescription>
           </CardHeader>
@@ -426,7 +426,7 @@ export default function Analytics() {
             {hoursPerPhase.length > 0 ? (
               hoursPerPhase.map((entry) => (
                 <div key={entry.phaseId} className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-[#A1A1AA] w-20 truncate">{entry.label}</span>
+                  <span className="text-xs font-mono text-[#A9A39A] w-20 truncate">{entry.label}</span>
                   <div className="flex-1">
                     <ProgressBar
                       value={entry.hours}
@@ -439,7 +439,7 @@ export default function Analytics() {
                 </div>
               ))
             ) : (
-              <div className="text-sm text-[#A1A1AA] py-4 text-center">No session data yet.</div>
+              <div className="text-sm text-[#A9A39A] py-4 text-center">No session data yet.</div>
             )}
           </CardContent>
         </Card>
@@ -447,7 +447,7 @@ export default function Analytics() {
         <Card variant="glass">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-              <Tag className="w-5 h-5 text-[#38BDF8]" /> Hours Per Topic
+              <Tag className="w-5 h-5 text-[#C8BFAF]" /> Hours Per Topic
             </CardTitle>
             <CardDescription>Top topics by recorded study time</CardDescription>
           </CardHeader>
@@ -455,7 +455,7 @@ export default function Analytics() {
             {hoursPerTopic.length > 0 ? (
               hoursPerTopic.map((entry) => (
                 <div key={entry.topicId} className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-[#A1A1AA] w-14 truncate">{entry.topicId}</span>
+                  <span className="text-xs font-mono text-[#A9A39A] w-14 truncate">{entry.topicId}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-white truncate">{entry.title}</div>
                     <ProgressBar
@@ -469,7 +469,7 @@ export default function Analytics() {
                 </div>
               ))
             ) : (
-              <div className="text-sm text-[#A1A1AA] py-4 text-center">No session data yet.</div>
+              <div className="text-sm text-[#A9A39A] py-4 text-center">No session data yet.</div>
             )}
           </CardContent>
         </Card>
@@ -483,12 +483,12 @@ export default function Analytics() {
           <CardContent className="space-y-4">
             {phaseData.map((phase) => (
               <div key={phase.name} className="flex items-center gap-3">
-                <span className="text-xs font-mono text-[#A1A1AA] w-8">{phase.name}</span>
+                <span className="text-xs font-mono text-[#A9A39A] w-8">{phase.name}</span>
                 <div className="flex-1">
                   <ProgressBar value={phase.percent} max={100} size="sm" showLabel={false} />
                 </div>
                 <span className="text-xs font-mono text-white w-12 text-right">{phase.completed}/{phase.total}</span>
-                <span className="text-xs text-[#A1A1AA] w-16 text-right">{phase.hours.toFixed(1)}h</span>
+                <span className="text-xs text-[#A9A39A] w-16 text-right">{phase.hours.toFixed(1)}h</span>
               </div>
             ))}
           </CardContent>
@@ -519,7 +519,7 @@ export default function Analytics() {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm text-[#A1A1AA]">
+              <div className="grid grid-cols-2 gap-3 text-sm text-[#A9A39A]">
                 {efData.map((d, index) => (
                   <div key={d.name} className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
@@ -536,7 +536,7 @@ export default function Analytics() {
       <Card variant="glass">
         <CardHeader>
           <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-[#38BDF8]" /> 30-Day Study Forecast
+            <TrendingUp className="w-5 h-5 text-[#C8BFAF]" /> 30-Day Study Forecast
           </CardTitle>
           <CardDescription>
             Projected study hours from your session velocity
@@ -549,11 +549,11 @@ export default function Analytics() {
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={forecastData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
-                <XAxis dataKey="date" stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                <YAxis stroke="#A1A1AA" fontSize={10} tickLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#121318', borderColor: '#27272A', color: '#FAFAFA' }} />
-                <Line type="monotone" dataKey="projected" stroke="#38BDF8" strokeWidth={2} dot={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2A2E36" />
+                <XAxis dataKey="date" stroke="#A9A39A" fontSize={10} tickLine={false} />
+                <YAxis stroke="#A9A39A" fontSize={10} tickLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#111318', borderColor: '#2A2E36', color: '#F4F1EA' }} />
+                <Line type="monotone" dataKey="projected" stroke="#C8BFAF" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -583,13 +583,13 @@ export default function Analytics() {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 justify-end text-xs text-[#A1A1AA] mt-3">
+          <div className="flex items-center gap-2 justify-end text-xs text-[#A9A39A] mt-3">
             <span>Less</span>
-            <div className="w-2.5 h-2.5 rounded-sm bg-[#18181B]" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-[#27272A]" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#1F2229]" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#2A2E36]" />
             <div className="w-2.5 h-2.5 rounded-sm bg-[#52525B]" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-[#71717A]" />
-            <div className="w-2.5 h-2.5 rounded-sm bg-[#38BDF8]/30" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#7C7870]" />
+            <div className="w-2.5 h-2.5 rounded-sm bg-[#C8BFAF]/30" />
             <span>More</span>
           </div>
         </CardContent>

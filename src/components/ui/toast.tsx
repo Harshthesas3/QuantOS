@@ -45,12 +45,12 @@ export function Toast({ toast, onDismiss }: { toast: ToastData; onDismiss: (id: 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white">{toast.title}</p>
           {toast.message && (
-            <p className="text-xs text-[#A1A1AA] mt-1 leading-relaxed">{toast.message}</p>
+            <p className="text-xs text-[#A9A39A] mt-1 leading-relaxed">{toast.message}</p>
           )}
         </div>
         <button
           onClick={() => onDismiss(toast.id)}
-          className="flex-shrink-0 p-1 text-[#A1A1AA] hover:text-white transition-colors"
+          className="flex-shrink-0 p-1 text-[#A9A39A] hover:text-white transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>

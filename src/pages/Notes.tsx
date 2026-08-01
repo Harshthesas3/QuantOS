@@ -45,19 +45,19 @@ export default function Notes() {
   }, [nodes, selectedNodeId])
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-          <NotebookPen className="w-7 h-7 text-[#38BDF8]" />
+          <NotebookPen className="w-7 h-7 text-[#C8BFAF]" />
           Notes
         </h1>
-        <p className="text-sm text-[#A1A1AA] mt-1">A central notebook for curriculum notes and reflection logs.</p>
+        <p className="text-sm text-[#A9A39A] mt-1">A central notebook for curriculum notes and reflection logs.</p>
       </header>
 
       <Card variant="glass">
         <CardContent className="pt-4">
           <div className="relative max-w-xl">
-            <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#A9A39A] absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -82,16 +82,16 @@ export default function Notes() {
                   setSelectedNodeId(node.id)
                   setDraft(node.notes)
                 }}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${selectedNodeId === node.id ? 'bg-[#18181B] border-[#38BDF8]/40' : 'bg-[#0D0E12] border-[#27272A] hover:border-[#3F3F46]'}`}
+                className={`w-full text-left p-3 rounded-lg border transition-colors ${selectedNodeId === node.id ? 'bg-[#1F2229] border-[#C8BFAF]/40' : 'bg-[#0B0C10] border-[#2A2E36] hover:border-[#3A3F46]'}`}
               >
                 <div className="flex items-center justify-between gap-3 mb-1">
-                  <span className="text-xs font-mono text-[#38BDF8]">{node.id}</span>
+                  <span className="text-xs font-mono text-[#C8BFAF]">{node.id}</span>
                   <Badge status={node.notes.trim() ? 'success' : 'default'} variant="outline">
                     {node.notes.trim() ? 'Has notes' : 'Empty'}
                   </Badge>
                 </div>
                 <div className="text-sm font-semibold text-white line-clamp-1">{node.title}</div>
-                <div className="text-[11px] text-[#A1A1AA] mt-1 line-clamp-2">{node.notes || 'No notes yet.'}</div>
+                <div className="text-[11px] text-[#A9A39A] mt-1 line-clamp-2">{node.notes || 'No notes yet.'}</div>
               </button>
             ))}
           </CardContent>
@@ -104,7 +104,7 @@ export default function Notes() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <CardTitle className="text-base text-white flex items-center gap-2">
-                      <BookText className="w-4 h-4 text-[#38BDF8]" /> {selectedNode.title}
+                      <BookText className="w-4 h-4 text-[#C8BFAF]" /> {selectedNode.title}
                     </CardTitle>
                     <CardDescription>
                       {selectedNode.id} · {selectedNode.phaseId.replace('PHASE_', 'Phase ')}
@@ -120,7 +120,7 @@ export default function Notes() {
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   placeholder="Write a structured note, derivation, or takeaway here..."
-                  className="w-full min-h-[260px] bg-[#0D0E12] border border-[#27272A] p-4 rounded-md text-sm text-[#FAFAFA] focus:outline-none focus:border-[#38BDF8] leading-relaxed resize-y"
+                  className="w-full min-h-[260px] bg-[#0B0C10] border border-[#2A2E36] p-4 rounded-md text-sm text-[#F4F1EA] focus:outline-none focus:border-[#C8BFAF] leading-relaxed resize-y"
                 />
                 <div className="flex items-center gap-3 flex-wrap">
                   <Button
@@ -132,7 +132,7 @@ export default function Notes() {
                   >
                     <Save className="w-3.5 h-3.5" /> Save notes
                   </Button>
-                  <span className="text-xs text-[#A1A1AA]">
+                  <span className="text-xs text-[#A9A39A]">
                     Autosave is manual here to keep changes explicit.
                   </span>
                 </div>
@@ -142,28 +142,28 @@ export default function Notes() {
             <EmptyState
               title="No topic selected"
               description="Choose a curriculum node from the list to begin writing notes."
-              icon={<NotebookPen className="w-6 h-6 text-[#A1A1AA]" />}
+              icon={<NotebookPen className="w-6 h-6 text-[#A9A39A]" />}
             />
           )}
 
           <Card variant="glass">
             <CardHeader>
               <CardTitle className="text-base text-white flex items-center gap-2">
-                <Clock3 className="w-4 h-4 text-[#38BDF8]" /> Recent Reflections
+                <Clock3 className="w-4 h-4 text-[#C8BFAF]" /> Recent Reflections
               </CardTitle>
               <CardDescription>Latest planner logs captured during study sessions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {reflections.length > 0 ? (
                 reflections.map((reflection) => (
-                  <div key={reflection.date} className="p-3 rounded-lg bg-[#0D0E12] border border-[#27272A]">
+                  <div key={reflection.date} className="p-3 rounded-lg bg-[#0B0C10] border border-[#2A2E36]">
                     <div className="flex items-center justify-between gap-3 mb-2">
-                      <span className="text-xs font-mono text-[#38BDF8]">{reflection.date}</span>
+                      <span className="text-xs font-mono text-[#C8BFAF]">{reflection.date}</span>
                       <Badge status="default" variant="outline">
                         Focus {reflection.focusRating}/5
                       </Badge>
                     </div>
-                    <p className="text-sm text-[#A1A1AA] leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm text-[#A9A39A] leading-relaxed whitespace-pre-wrap">
                       {reflection.reflection || 'No reflection text saved.'}
                     </p>
                   </div>

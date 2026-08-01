@@ -20,7 +20,7 @@ function AppContent() {
   useDailyReminder(isLoginPage)
 
   return (
-    <div className="App min-h-screen flex flex-col bg-[#0D0E12]">
+    <div className="App min-h-screen flex flex-col bg-[#0B0C10]">
       {!isLoginPage && <Navigation />}
       <main className="flex-1">
         <Routes />

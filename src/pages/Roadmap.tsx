@@ -105,19 +105,19 @@ export default function Roadmap() {
   const isPhaseExpanded = (phaseId: string) => expandedPhases[phaseId] !== false
 
   return (
-    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#FAFAFA]">
-      <header className="pb-4 border-b border-[#27272A]">
+    <div className="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6 text-[#F4F1EA]">
+      <header className="pb-4 border-b border-[#2A2E36]">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <Eye className="w-7 h-7 text-[#38BDF8]" />
+              <Eye className="w-7 h-7 text-[#C8BFAF]" />
               Curriculum Roadmap
             </h1>
-            <p className="text-sm text-[#A1A1AA] mt-1">
+            <p className="text-sm text-[#A9A39A] mt-1">
               {Object.keys(nodes).length} nodes across {PHASES.length} phases
             </p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-[#A1A1AA]">
+          <div className="flex items-center gap-2 text-xs text-[#A9A39A]">
             <span className="w-2 h-2 bg-green-400 rounded-full" />
             <span>{criticalPath.length} nodes on critical path</span>
           </div>
@@ -125,7 +125,7 @@ export default function Roadmap() {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-[#A1A1AA] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-[#A9A39A] absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Search topics, nodes, descriptions..."
               value={searchQuery}
@@ -160,13 +160,13 @@ export default function Roadmap() {
           if (phaseNodes.length === 0 && searchQuery) return null
 
           return (
-            <div key={phase.id} className="border border-[#27272A] rounded-lg overflow-hidden">
+            <div key={phase.id} className="border border-[#2A2E36] rounded-lg overflow-hidden">
               <button
                 onClick={() => togglePhase(phase.id)}
-                className="w-full flex items-center justify-between p-4 bg-[#121318] hover:bg-[#18181B] transition-colors text-left"
+                className="w-full flex items-center justify-between p-4 bg-[#111318] hover:bg-[#1F2229] transition-colors text-left"
               >
                 <div className="flex items-center gap-3">
-                  {isExpanded ? <ChevronDown className="w-4 h-4 text-[#A1A1AA]" /> : <ChevronRight className="w-4 h-4 text-[#A1A1AA]" />}
+                  {isExpanded ? <ChevronDown className="w-4 h-4 text-[#A9A39A]" /> : <ChevronRight className="w-4 h-4 text-[#A9A39A]" />}
                   <span className="text-sm font-semibold text-white">{phase.title}</span>
                   <Badge status="info" variant="outline" className="text-[9px]">{phase.id.replace('PHASE_', 'P')}</Badge>
                   {difficulty && (
@@ -174,7 +174,7 @@ export default function Roadmap() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-mono text-[#A1A1AA]">{counts.completed}/{counts.total}</span>
+                  <span className="text-xs font-mono text-[#A9A39A]">{counts.completed}/{counts.total}</span>
                   {counts.total > 0 && (
                     <ProgressBar value={Math.round((counts.completed / counts.total) * 100)} max={100} size="sm" showLabel={false} className="w-20" />
                   )}
@@ -182,8 +182,8 @@ export default function Roadmap() {
               </button>
 
               {isExpanded && (
-                <div className="p-4 space-y-3 bg-[#0D0E12]">
-                  <p className="text-xs text-[#A1A1AA] mb-3">{phase.domain}</p>
+                <div className="p-4 space-y-3 bg-[#0B0C10]">
+                  <p className="text-xs text-[#A9A39A] mb-3">{phase.domain}</p>
                   {phaseNodes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {phaseNodes.map((node) => {
@@ -192,11 +192,11 @@ export default function Roadmap() {
                           <Card
                             key={node.id}
                             variant={isCritical ? 'glass' : 'default'}
-                            className={`p-4 transition-all hover:scale-[1.01] duration-150 ${isCritical ? 'ring-1 ring-[#38BDF8]/40' : ''}`}
+                            className={`p-4 transition-all hover:scale-[1.01] duration-150 ${isCritical ? 'ring-1 ring-[#C8BFAF]/40' : ''}`}
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#27272A] text-[#38BDF8] rounded">
+                                <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#2A2E36] text-[#C8BFAF] rounded">
                                   {node.id}
                                 </span>
                                 <h4 className="text-sm font-semibold text-white line-clamp-1">{node.title}</h4>
@@ -213,24 +213,24 @@ export default function Roadmap() {
                               <span className={`text-[10px] font-semibold ${difficulty?.color}`}>{difficulty?.label}</span>
                             </div>
 
-                            <p className="text-xs text-[#A1A1AA] line-clamp-2 mb-3 leading-relaxed">{node.description}</p>
+                            <p className="text-xs text-[#A9A39A] line-clamp-2 mb-3 leading-relaxed">{node.description}</p>
 
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 text-[10px] text-[#A1A1AA]">
+                              <div className="flex items-center gap-2 text-[10px] text-[#A9A39A]">
                                 <Clock className="w-3 h-3" />
                                 {node.estimatedHours}h
                               </div>
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => handleStatusOverride(node.id, node.status)}
-                                  className="text-[10px] bg-[#27272A] hover:bg-[#3F3F46] px-2 py-0.5 rounded border border-[#27272A] text-[#A1A1AA] hover:text-[#FAFAFA] transition-colors"
+                                  className="text-[10px] bg-[#2A2E36] hover:bg-[#3A3F46] px-2 py-0.5 rounded border border-[#2A2E36] text-[#A9A39A] hover:text-[#F4F1EA] transition-colors"
                                   title="Cycle status"
                                 >
                                   {node.status}
                                 </button>
                                 <Link
                                   to={`/topic/${node.id}`}
-                                  className="flex items-center gap-1.5 px-2.5 py-1 bg-[#27272A] hover:bg-[#38BDF8] hover:text-[#0D0E12] text-xs font-semibold text-[#FAFAFA] rounded transition-all duration-150"
+                                  className="flex items-center gap-1.5 px-2.5 py-1 bg-[#2A2E36] hover:bg-[#C8BFAF] hover:text-[#0B0C10] text-xs font-semibold text-[#F4F1EA] rounded transition-all duration-150"
                                 >
                                   <Eye className="w-3 h-3" /> Study
                                 </Link>
@@ -241,7 +241,7 @@ export default function Roadmap() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-[#A1A1AA] text-sm">
+                    <div className="text-center py-6 text-[#A9A39A] text-sm">
                       No topics match your filters in this phase.
                     </div>
                   )}
@@ -253,8 +253,8 @@ export default function Roadmap() {
       </div>
 
       {filteredNodes.length === 0 && !searchQuery && (
-        <div className="text-center py-12 text-[#A1A1AA]">
-          <Filter className="w-8 h-8 mx-auto mb-3 text-[#27272A]" />
+        <div className="text-center py-12 text-[#A9A39A]">
+          <Filter className="w-8 h-8 mx-auto mb-3 text-[#2A2E36]" />
           <p>No topics match your current filters.</p>
         </div>
       )}

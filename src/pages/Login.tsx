@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Cpu, LogIn, UserPlus, Eye, EyeOff } from 'lucide-react'
 import { useUserStore } from '../stores/userStore'
@@ -80,17 +80,17 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0D0E12] items-center justify-center p-6">
+    <div className="flex min-h-screen bg-[#0B0C10] items-center justify-center p-6">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Cpu className="w-10 h-10 text-[#38BDF8] animate-pulse" />
-            <span className="text-3xl font-bold text-[#38BDF8]">QuantOS</span>
+            <Cpu className="w-10 h-10 text-[#C8BFAF] animate-pulse" />
+            <span className="text-3xl font-bold text-[#C8BFAF]">QuantOS</span>
           </div>
           <h1 className="text-2xl font-bold text-white">
             {mode === 'create' ? 'Create your local account' : 'Welcome back'}
           </h1>
-          <p className="text-sm text-[#A1A1AA] mt-2">
+          <p className="text-sm text-[#A9A39A] mt-2">
             {mode === 'create'
               ? 'Credentials are stored locally with Argon2id hashing. No remote service is involved.'
               : 'Enter the password you set when you created this workspace.'}
@@ -101,7 +101,7 @@ export default function Login() {
           <div>
             <label
               htmlFor="login-username"
-              className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block mb-1.5"
+              className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block mb-1.5"
             >
               Username
             </label>
@@ -111,7 +111,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Choose a username"
-              className="w-full bg-[#121318] border border-[#27272A] px-4 py-2.5 rounded text-sm text-white placeholder-[#A1A1AA] focus:outline-none focus:border-[#38BDF8] transition-colors"
+              className="w-full bg-[#111318] border border-[#2A2E36] px-4 py-2.5 rounded text-sm text-white placeholder-[#A9A39A] focus:outline-none focus:border-[#C8BFAF] transition-colors"
               autoComplete="username"
               required
               autoFocus
@@ -121,7 +121,7 @@ export default function Login() {
           <div>
             <label
               htmlFor="login-password"
-              className="text-xs text-[#A1A1AA] uppercase tracking-wider font-semibold block mb-1.5"
+              className="text-xs text-[#A9A39A] uppercase tracking-wider font-semibold block mb-1.5"
             >
               Password
             </label>
@@ -132,14 +132,14 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === 'create' ? 'At least 6 characters' : 'Your workspace password'}
-                className="w-full bg-[#121318] border border-[#27272A] px-4 py-2.5 pr-10 rounded text-sm text-white placeholder-[#A1A1AA] focus:outline-none focus:border-[#38BDF8] transition-colors"
+                className="w-full bg-[#111318] border border-[#2A2E36] px-4 py-2.5 pr-10 rounded text-sm text-white placeholder-[#A9A39A] focus:outline-none focus:border-[#C8BFAF] transition-colors"
                 autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#A1A1AA] hover:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#A9A39A] hover:text-white"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -156,7 +156,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={busy}
-            className="w-full py-2.5 bg-[#38BDF8] text-[#0D0E12] font-semibold rounded hover:bg-[#38BDF8]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+            className="w-full py-2.5 bg-[#C8BFAF] text-[#0B0C10] font-semibold rounded hover:bg-[#C8BFAF]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
           >
             {mode === 'create' ? (
               <>
@@ -174,7 +174,7 @@ export default function Login() {
           <button
             type="button"
             onClick={switchMode}
-            className="text-xs text-[#A1A1AA] hover:text-[#38BDF8] transition-colors"
+            className="text-xs text-[#A9A39A] hover:text-[#C8BFAF] transition-colors"
           >
             {mode === 'create'
               ? 'Already have a workspace? Sign in'
@@ -184,14 +184,14 @@ export default function Login() {
             <button
               type="button"
               onClick={handleFallback}
-              className="block w-full text-xs text-[#71717A] hover:text-[#A1A1AA]"
+              className="block w-full text-xs text-[#7C7870] hover:text-[#A9A39A]"
             >
               Forgot your password? Use username-only fallback
             </button>
           )}
         </div>
 
-        <div className="text-center text-xs text-[#71717A]">
+        <div className="text-center text-xs text-[#7C7870]">
           Local-first. No remote authentication. No telemetry.
         </div>
       </div>

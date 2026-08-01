@@ -244,3 +244,23 @@ body.theme-light .border-\[\#2A2E36\] { border-color: var(--border-primary); }
   }
 }
 
+/* Dashboard subtle mount animation */
+@keyframes dash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.dash-enter {
+  animation: dash-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dash-enter {
+    animation: none;
+  }
+}
+

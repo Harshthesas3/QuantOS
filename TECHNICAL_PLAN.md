@@ -1,509 +1,326 @@
-# QuantOS Technical Design Document
+﻿# QuantOS Technical Design Document
 
-## Product Vision
-QuantOS is an educational operating system designed to teach operating systems concepts through an interactive, hands-on approach. It provides students with a safe environment to experiment with OS concepts like process scheduling, memory management, file systems, and device drivers.
+> **Status:** This is the authoritative technical plan for the current product.
+> It has been revised to match the application that is actually being built:
+> a **local-first, single-user quantitative-finance study planner** for Windows,
+> delivered as a Tauri desktop app with a SQLite-backed persistence layer.
 
-## Proposed Architecture
+## 1. Product Vision
 
-### Overview
-QuantOS follows a modular architecture with clearly separated concerns:
-- **Core OS Layer**: Kernel services, process management, memory management
-- **Hardware Abstraction Layer**: Device drivers, hardware interaction
-- **System Services**: File system, networking, security subsystems
-- **User Space**: Applications, shells, utilities
-- **Educational Layer**: Interactive tutorials, visualizations, debugging tools
+QuantOS is a **local-first desktop application** that helps a single learner
+master the quantitative-finance curriculum described in the PRD. The app is
+not a SaaS, not multi-user, not deployed publicly.
 
-### Technology Stack
-Based on the PRD requirements and development principles:
+- 11 phases across 73 curriculum nodes (JEE math, advanced math, Python, ML,
+  time series, financial economics, stochastic finance, alpha research, C++
+  research engineering, paper replications, portfolio projects).
+- A roadmap with a DAG prerequisite structure that unlocks each node only
+  when its prerequisites are complete.
+- A daily planner with tasks, time tracking, daily reflection, and
+  carry-over of unfinished work.
+- An SM-2 spaced-repetition flashcard engine bound to curriculum nodes.
+- An analytics dashboard for streaks, velocity, phase progress, and EF
+  distribution.
+- Settings for theme, import/export of local backups, and full reset.
 
-#### Desktop Framework
-- **Tauri v2**: For building the desktop application with web technologies
-- **Rust backend**: For performance, safety, and system-level operations
-- **Frontend**: React 19 with TypeScript for type safety and maintainability
+All persistence is to a SQLite database inside the Tauri-managed application
+data directory.
 
-#### Frontend Stack
-- **React 19**: Modern React with concurrent features
-- **TypeScript**: For static typing and improved developer experience
-- **Vite**: Fast build tool and development server
-- **Tailwind CSS**: Utility-first CSS framework for rapid UI development
-- **shadcn/ui**: Reusable UI components built on Radix UI and Tailwind CSS
-- **Lucide Icons**: Consistent, lightweight icon set
+## 2. Architecture
 
-#### State Management
-- **Zustand**: Lightweight, scalable state management solution
+### 2.1 Process model
 
-#### Data Layer
-- **SQLite**: Embedded database for persistent storage
-- **Drizzle ORM**: Type-safe SQL query builder for TypeScript
+- **Tauri 2** wraps a React 19 SPA on Windows, macOS, and Linux.
+- The Rust side currently only logs in debug builds (`tauri-plugin-log`).
+  The application data itself lives in a **better-sqlite3** database
+  accessed through a `services/db.ts` module that runs in the renderer.
+- A single **React Router v6** browser router wires the protected routes.
+- **Zustand stores** are the source of truth in memory; they hydrate from
+  SQLite on app boot and write back through a thin subscription layer.
 
-#### Routing & Navigation
-- **React Router v6**: Declarative routing for SPA navigation
+### 2.2 Folder structure
 
-#### Form Handling & Validation
-- **React Hook Form**: Performant form validation and management
-- **Zod**: Schema-based validation with TypeScript inference
-
-#### Data Visualization
-- **Recharts**: Composable charting library built on React and D3
-
-#### Markdown Rendering
-- **react-markdown**: Secure markdown rendering with plugin support
-
-#### Search Functionality
-- **FlexSearch**: Fast, full-text search library with zero dependencies
-
-#### Testing Framework
-- **Vitest**: Fast unit testing framework built on Vite
-- **Playwright**: End-to-end testing for user flows
-
-#### Package Management
-- **pnpm**: Fast, disk space efficient package manager
-
-## Folder Structure
 ```
 src/
-├── assets/              # Static assets (images, icons, fonts)
-├── components/          # Reusable UI components
-│   ├── ui/              # shadcn/ui components
-│   ├── layout/          # Layout components (header, footer, sidebar)
-│   ├── widgets/         # Reusable widgets (charts, tables, cards)
-│   └── educational/     # Educational components (visualizations, simulators)
-├── hooks/               # Custom React hooks
-├── lib/                 # Utility functions and helpers
-├── stores/              # Zustand stores
-├── services/            # Service layers (API, database, etc.)
-├── types/               # TypeScript types and interfaces
-├── utils/               # Utility functions
-├── pages/               # Page components (routes)
-├── routes/              # Route definitions
-├── styles/              # Global styles and Tailwind configuration
-└── main.tsx             # Application entry point
+  App.tsx
+  App.css
+  main.tsx
+  env.d.ts
+  components/
+    CommandPalette.tsx
+    ErrorBoundary.tsx
+    layout/Navigation.tsx
+    ui/                 # button, card, badge, input, select, dialog,
+                        # tooltip, tabs, progress, toast, separator,
+                        # empty-state
+  hooks/
+    useTimerTicker.ts
+  lib/
+    toast.ts
+    utils.ts
+  pages/
+    Dashboard.tsx
+    Roadmap.tsx
+    TopicDetails.tsx
+    DailyPlanner.tsx
+    Analytics.tsx
+    Settings.tsx
+    Login.tsx
+  routes/index.tsx
+  services/
+    db.ts
+    repository.ts
+  stores/
+    userStore.ts
+    curriculumStore.ts
+    plannerStore.ts
+    spacedRepetitionStore.ts
+  types/
 
-backend/
-├── src/
-│   ├── kernel/          # Core OS simulation components
-│   ├── drivers/         # Device driver implementations
-│   ├── fs/              # File system implementation
-│   ├── mm/              # Memory management
-│   ├── scheduler/       # Process scheduling algorithms
-│   ├── sync/            # Synchronization primitives
-│   └── utils/           # Backend utility functions
-├── migrations/          # Database migration scripts
-└── schemas/             # Database schema definitions
+src-tauri/
+  Cargo.toml
+  tauri.conf.json
+  capabilities/default.json
+  src/{main.rs, lib.rs}
 
 tests/
-├── unit/                # Unit tests
-├── integration/         # Integration tests
-└── e2e/                 # End-to-end tests
+  setup.ts
+  unit/
+    curriculumStore.test.ts
+    spacedRepetition.test.ts
+    plannerStore.test.ts
 
-docs/                    # Documentation files
-public/                  # Static public assets
+docs/
+  USER_GUIDE.md
 ```
 
-## Database Schema
-
-### Core Tables
-1. **Users**
-   - id (PK)
-   - username
-   - email
-   - created_at
-   - updated_at
-
-2. **Courses**
-   - id (PK)
-   - title
-   - description
-   - difficulty_level
-   - created_at
-   - updated_at
-
-3. **Modules**
-   - id (PK)
-   - course_id (FK)
-   - title
-   - description
-   - order_index
-   - created_at
-   - updated_at
-
-4. **Lessons**
-   - id (PK)
-   - module_id (FK)
-   - title
-   - content_type (text, video, interactive, simulation)
-   - content_data (JSON)
-   - order_index
-   - created_at
-   - updated_at
-
-5. **Progress**
-   - id (PK)
-   - user_id (FK)
-   - lesson_id (FK)
-   - completed
-   - score
-   - time_spent
-   - last_accessed
-   - updated_at
-
-6. **Simulations**
-   - id (PK)
-   - lesson_id (FK)
-   - simulation_type (scheduling, memory, file_system, etc.)
-   - initial_state (JSON)
-   - expected_outcomes (JSON)
-   - created_at
-   - updated_at
-
-7. **Achievements**
-   - id (PK)
-   - user_id (FK)
-   - achievement_type
-   - earned_at
-
-### Relationships
-- Users can have many Progress records
-- Courses have many Modules
-- Modules have many Lessons
-- Lessons can have one Simulation
-- Progress links Users to Lessons
-- Achievements link Users to accomplishment types
-
-## State Management Strategy
-
-### Global State (Zustand Stores)
-1. **User Store**
-   - Authentication state
-   - User profile information
-   - Preferences and settings
-
-2. **Course Store**
-   - Available courses
-   - Currently selected course
-   - Course metadata and structure
-
-3. **Progress Tracker**
-   - User progress through lessons/modules
-   - Completed lessons/modules
-   - Scores and timestamps
-   - Streak information
-
-4. **Simulation State**
-   - Current state of active simulations
-   - Simulation parameters
-   - Interactive elements state
-
-5. **UI State**
-   - UI-specific state
-   - Sidebar visibility
-   - Active tab/panel
-   - Notification queue
-   - Loading states
-
-### State Persistence
-- User preferences persisted to localStorage
-- Course progress synchronized with backend database
-- Simulation state can be saved/restored for experimentation
-
-## Routing Strategy
-
-### Route Structure
-- `/` - Dashboard/Home
-- `/courses` - Course catalog
-- `/courses/:courseId` - Course overview
-- `/courses/:courseId/modules/:moduleId` - Module view
-- `/courses/:courseId/modules/:moduleId/lessons/:lessonId` - Lesson player
-- `/simulations/:simulationId` - Interactive simulation
-- `/progress` - User progress dashboard
-- `/achievements` - Achievements and badges
-- `/settings` - User preferences and settings
-
-### Route Protection
-- Public routes: `/`, `/courses`, course/public content
-- Protected routes: All user-specific content, progress tracking, settings
-- Authentication check via route guards
-
-## Theme System
-
-### Design Principles
-- **Clarity**: Clear visual hierarchy and typography
-- **Focus**: Minimal distractions, focus on learning content
-- **Discipline**: Professional, subdued aesthetic
-- **Consistency**: Unified spacing, typography, and interaction patterns
-
-### Inspiration
-- **Linear**: Clean, efficient interface for productivity
-- **Raycast**: Command-driven, keyboard-first interactions
-- **Obsidian**: Knowledge-focused, linking capabilities
-- **Apple Notes**: Simple, elegant note-taking experience
-
-### Implementation
-- **Tailwind CSS**: Utility-first approach for rapid styling
-- **Dark/Light Mode**: System preference aware with manual override
-- **Custom Variables**: Semantic color variables for brand consistency
-- **Typography**: System font stack with clear hierarchy
-- **Spacing**: 4px grid system for consistent spacing
-- **Animations**: Subtle transitions and micro-interactions
-
-## Data Model
-
-### Core Entities
-1. **User**
-   - Attributes: id, username, email, created_at, updated_at, preferences
-   - Relationships: one-to-many with Progress, Achievements
-
-2. **Course**
-   - Attributes: id, title, description, difficulty_level, created_at, updated_at
-   - Relationships: one-to-many with Modules
-
-3. **Module**
-   - Attributes: id, course_id, title, description, order_index, created_at, updated_at
-   - Relationships: many-to-one with Course, one-to-many with Lessons
-
-4. **Lesson**
-   - Attributes: id, module_id, title, content_type, content_data, order_index, created_at, updated_at
-   - Relationships: many-to-one with Module, one-to-one with Simulation (optional)
-
-5. **Progress**
-   - Attributes: id, user_id, lesson_id, completed, score, time_spent, last_accessed, updated_at
-   - Relationships: many-to-one with User, many-to-one with Lesson
-
-6. **Simulation**
-   - Attributes: id, lesson_id, simulation_type, initial_state, expected_outcomes, created_at, updated_at
-   - Relationships: many-to-one with Lesson
-
-7. **Achievement**
-   - Attributes: id, user_id, achievement_type, earned_at
-   - Relationships: many-to-one with User
-
-## Progress Engine Design
-
-### Progress Tracking
-- **Granular Tracking**: Track progress at lesson level
-- **Multiple Metrics**: Completion status, score, time spent, attempts
-- **Streak Tracking**: Daily learning streaks for motivation
-- **Mastery Tracking**: Adaptive difficulty based on performance
-
-### Progress Calculation
-- **Course Completion**: Percentage of lessons completed
-- **Module Mastery**: Weighted average of lesson scores
-- **Skill Assessment**: Tag-based skill tracking across lessons
-- **Time Investment**: Total time spent learning
-
-### Progress Persistence
-- **Local Storage**: Immediate feedback and offline support
-- **Backend Sync**: Periodic synchronization with server
-- **Conflict Resolution**: Last-write-wins with timestamp resolution
-- **Backup/Restore**: Export/import progress data
-
-## Revision Engine Design
-
-### Version Control for Learning
-- **Content Versioning**: Track changes to course materials
-- **Student Versioning**: Track student work and iterations
-- **Diff Visualization**: Show changes between versions
-- **Rollback Capability**: Revert to previous versions
-
-### Implementation Approach
-- **Content Versioning**: Git-like approach for course content
-- **Student Work**: Automatic snapshots at key intervals
-- **Comparison Views**: Side-by-side or inline diff views
-- **Branching/Merging**: For experimental learning paths
-
-### Use Cases
-- **Instructor Updates**: Update course material without losing student progress
-- **Student Experimentation**: Try different approaches safely
-- **Error Recovery**: Revert mistakes in simulations or exercises
-- **Learning Analytics**: Track evolution of understanding
-
-## Search Strategy
-
-### Search Implementation
-- **Full-Text Search**: FlexSearch for client-side search
-- **Fuzzy Matching**: Tolerant of typos and variations
-- **Multi-field Search**: Search across titles, descriptions, content
-- **Filtering**: By course, module, difficulty, completion status
-- **Sorting**: By relevance, date, popularity, difficulty
-
-### Search Features
-- **Instant Results**: As-you-type search suggestions
-- **Highlighting**: Highlight matched terms in results
-- **Faceted Navigation**: Filter results by metadata
-- **Recent Searches**: History of user searches
-- **Popular Searches**: Trending content discovery
-
-### Performance Optimization
-- **Indexing**: Pre-built search indexes for faster lookup
-- **Debouncing**: Reduce search frequency during typing
-- **Caching**: Cache frequent search results
-- **Web Workers**: Offload search processing to background threads
-
-## Backup Strategy
-
-### Data Backup Approach
-- **Automatic Backups**: Scheduled background backups
-- **User-Initiated Backups**: Manual backup/export functionality
-- **Cloud Sync**: Optional synchronization with cloud storage
-- **Version History**: Maintain multiple backup versions
-
-### Backup Contents
-- **User Data**: Profile, preferences, achievements
-- **Progress Data**: Completed lessons, scores, timestamps
-- **User Generated**: Notes, code snippets, simulation states
-- **Application State**: Window layouts, panel positions
-
-### Backup Implementation
-- **Local Storage**: Periodic snapshots to IndexedDB
-- **Export Functionality**: Downloadable JSON/zip archives
-- **Import Functionality**: Restore from backup files
-- **Conflict Handling**: Merge strategies for concurrent modifications
-- **Encryption**: Optional encryption for sensitive data
-
-## Testing Strategy
-
-### Unit Testing
-- **Framework**: Vitest with React Testing Library
-- **Coverage Target**: 80%+ code coverage
-- **Test Types**: 
-  - Utility functions
-  - Custom hooks
-  - Component logic (isolated)
-  - Store actions and selectors
-- **Mocking**: Mock external dependencies and APIs
-
-### Integration Testing
-- **Focus**: Component interactions and data flow
-- **Scenarios**:
-  - Form submission and validation
-  - State transitions in complex components
-  - API service interactions
-  - Store persistence and synchronization
-- **Tools**: Vitest with MSW (Mock Service Worker) for API mocking
-
-### End-to-End Testing
-- **Framework**: Playwright for cross-browser testing
-- **Scenarios**:
-  - User registration and onboarding
-  - Course enrollment and progression
-  - Simulation interaction and completion
-  - Progress tracking and achievement earning
-  - Settings modification and persistence
-- **Environments**: Chrome, Firefox, Safari (headless and headed)
-
-### Performance Testing
-- **Metrics**: 
-  - First Contentful Paint (FCP) < 1s
-  - Time to Interactive (TTI) < 3s
-  - Memory usage < 100MB
-  - Frame rate > 60fps for animations
-- **Tools**: Lighthouse, Web Vitals, custom performance monitoring
-
-### Accessibility Testing
-- **Standards**: WCAG 2.1 AA compliance
-- **Testing**: 
-  - Keyboard navigation
-  - Screen reader compatibility
-  - Color contrast ratios
-  - Focus management
-  - ARIA attributes
-- **Tools**: axe-core, manual testing with assistive technologies
-
-## Performance Goals
-
-### Load Performance
-- **Initial Load**: < 2 seconds on 3G connection
-- **Repeat Visits**: < 1 second with service worker caching
-- **Asset Optimization**: Code splitting, lazy loading, image optimization
-
-### Runtime Performance
-- **Frame Rate**: Consistent 60fps for animations and interactions
-- **Input Latency**: < 50ms for user interactions
-- **Memory Usage**: < 150MB typical usage, < 300MB peak
-- **Bundle Size**: < 2MB gzipped for initial load
-
-### Scalability
-- **Concurrent Users**: Support for 1000+ simultaneous users
-- **Data Volume**: Efficient handling of large course libraries
-- **Offline Capability**: Full functionality without network connection
-- **Sync Efficiency**: Minimal bandwidth usage for data synchronization
-
-## Development Milestones
-
-### Phase 1: Foundation (Weeks 1-2)
-- [ ] Project setup and tooling configuration
-- [ ] Basic application structure with Tauri + React + TypeScript
-- [ ] Routing and basic navigation
-- [ ] State management foundation with Zustand
-- [ ] UI component library setup (shadcn/ui + Tailwind)
-- [ ] Authentication system (basic)
-- [ ] Simple dashboard view
-
-### Phase 2: Core Learning System (Weeks 3-4)
-- [ ] Course and module data models
-- [ ] Lesson player component
-- [ ] Progress tracking system
-- [ ] Basic content rendering (text, markdown)
-- [ ] Navigation between lessons and modules
-- [ ] Course catalog and browsing
-
-### Phase 3: Interactive Learning (Weeks 5-6)
-- [ ] Simulation framework foundation
-- [ ] First set of basic simulations (process scheduling)
-- [ ] Interactive code editors
-- [ ] Visualization components
-- [ ] Assessment and quiz system
-- [ ] Immediate feedback mechanisms
-
-### Phase 4: Enhanced Features (Weeks 7-8)
-- [ ] Achievement and badge system
-- [ ] Advanced simulations (memory management, file systems)
-- [ ] Search functionality implementation
-- [ ] Settings and preferences system
-- [ ] Performance optimization and profiling
-- [ ] Accessibility compliance audit
-
-### Phase 5: Polish and Release (Weeks 9-10)
-- [ ] Comprehensive testing suite
-- [ ] Bug fixing and stability improvements
-- [ ] Documentation and help system
-- [ ] Internationalization foundation
-- [ ] Performance tuning
-- [ ] Beta testing and feedback incorporation
-- [ ] Production release preparation
-
-## Risk Mitigation
-
-### Technical Risks
-1. **Performance Issues with Simulations**
-   - Mitigation: Use Web Workers for CPU-intensive simulations
-   - Mitigation: Implement progressive disclosure of complexity
-   - Mitigation: Cache simulation results where appropriate
-
-2. **State Management Complexity**
-   - Mitigation: Strict separation of concerns in stores
-   - Mitigation: Use middleware for logging and debugging
-   - Mitigation: Implement selector memoization for performance
-
-3. **Data Synchronization Conflicts**
-   - Mitigation: Last-write-wins with vector clocks for conflict detection
-   - Mitigation: User-friendly conflict resolution interface
-   - Mitigation: Regular automatic sync to minimize conflicts
-
-### Educational Risks
-1. **Overwhelming Complexity**
-   - Mitigation: Progressive disclosure of concepts
-   - Mitigation: Guided learning paths for beginners
-   - Mitigation: Optional advanced content for experienced users
-
-2. **Conceptual Misunderstandings**
-   - Mitigation: Built-in concept checking and validation
-   - Mitigation: Immediate feedback on exercises
-   - Mitigation: Visual representations of abstract concepts
-
-### Mitigation Strategies
-- **Incremental Development**: Build and test small features continuously
-- **Regular Feedback Loops**: Frequent user testing with target audience
-- **Performance Budgets**: Set and enforce performance constraints early
-- **Accessibility First**: Consider accessibility from the start, not as an afterthought
-- **Modular Design**: Enable easy replacement or upgrading of components
+The `backend/` Rust kernel/drivers/fs/mm/scheduler/sync tree described in the
+previous revision does **not exist** and is **not part of the implementation
+plan**. References to OS-simulator modules in the PRD are intentionally out of
+scope for this product.
+
+## 3. Status legend
+
+- **Implemented** - working in the current codebase and reachable from the UI.
+- **In Progress** - wired up but contains a known gap documented in the
+  Implementation Gaps section.
+- **Future Enhancements** - explicit non-goals for the current release;
+  listed for transparency, not scheduled work.
+
+## 4. Implemented
+
+### 4.1 Frontend
+
+- React 19 + TypeScript SPA mounted via `src/main.tsx` and routed by
+  `src/routes/index.tsx`.
+- Tailwind 3 with hand-tuned design tokens in `App.css` (`#0D0E12`
+  background, `#38BDF8` accent, IBM Plex Sans stack).
+- shadcn-style primitives built on Radix: button, card, badge, input,
+  select, dialog, tooltip, tabs, progress, toast, separator, empty-state.
+- Command palette opens via `Cmd/Ctrl+K`, searches curriculum nodes, and
+  navigates.
+- Navigation bar with active route highlighting and live timer chip.
+- Toast container with success / error / info / warning variants.
+- ErrorBoundary at `App.tsx` level catches render crashes and offers
+  reload instead of an empty screen.
+
+### 4.2 Routing
+
+| Path          | Component     | Protection                 |
+|---------------|---------------|----------------------------|
+| `/`           | Dashboard     | auth                       |
+| `/roadmap`    | Roadmap       | auth                       |
+| `/topic/:id`  | TopicDetails  | auth                       |
+| `/planner`    | DailyPlanner  | auth                       |
+| `/analytics`  | Analytics     | auth                       |
+| `/settings`   | Settings      | auth                       |
+| `/login`      | Login         | redirect-if-authenticated  |
+| `*`           | redirect `/`  | -                          |
+
+### 4.3 Stores
+
+| Store                   | Responsibility                                                          |
+|-------------------------|-------------------------------------------------------------------------|
+| `userStore`             | Local user record, login/logout, settings profile                      |
+| `curriculumStore`       | 73-node DAG, status transitions, critical-path, per-node notes          |
+| `plannerStore`          | Daily tasks, priority, estimates, timer, daily log, carry-over          |
+| `spacedRepetitionStore` | SM-2 cards, ease-factor / interval / review-count, history, due count   |
+
+### 4.4 Study engine
+
+- SM-2 algorithm in `spacedRepetitionStore.submitReview`: ease floor 1.3,
+  interval reset on score < 3, history log per review.
+- Critical-path analysis in `curriculumStore.getCriticalPath`: DAG
+  longest-path over estimated hours, computed via a memoized DFS that is
+  invalidated on every status change.
+- Streak calculation in `Analytics` (`longestStreak`).
+
+### 4.5 Local persistence (SQLite)
+
+- SQLite via `services/db.ts` (better-sqlite3 prebuilt binary, single file at
+  `<appDataDir>/quantos.db`, with a `<cwd>/.quantos/quantos.db` fallback for
+  `vite dev` outside Tauri).
+- Migration runner creates the schema on first launch and writes
+  `schema_version` to `app_setting`.
+- Stores hydrate from SQLite on boot and persist on change via the
+  `repository.ts` helpers.
+
+### 4.6 SQLite schema
+
+```sql
+CREATE TABLE user (
+  id TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  email TEXT,
+  password_hash TEXT,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE curriculum_node (
+  id TEXT PRIMARY KEY,
+  phase_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  status TEXT NOT NULL,
+  estimated_hours REAL NOT NULL,
+  actual_hours REAL NOT NULL DEFAULT 0,
+  notes TEXT NOT NULL DEFAULT '',
+  mastery_criteria_json TEXT NOT NULL DEFAULT '[]',
+  resources_json TEXT NOT NULL DEFAULT '[]',
+  prerequisites_json TEXT NOT NULL DEFAULT '[]',
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE planner_task (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  completed INTEGER NOT NULL DEFAULT 0,
+  estimated_minutes INTEGER,
+  actual_minutes INTEGER NOT NULL DEFAULT 0,
+  node_id TEXT,
+  date TEXT NOT NULL,
+  priority TEXT NOT NULL,
+  notes TEXT NOT NULL DEFAULT '',
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE planner_log (
+  date TEXT PRIMARY KEY,
+  focus_rating INTEGER NOT NULL,
+  reflection TEXT NOT NULL DEFAULT '',
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE sm2_card (
+  id TEXT PRIMARY KEY,
+  topic_id TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  ease_factor REAL NOT NULL,
+  interval_days INTEGER NOT NULL,
+  review_count INTEGER NOT NULL,
+  next_review_date TEXT NOT NULL,
+  history_json TEXT NOT NULL DEFAULT '[]',
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE app_setting (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+```
+
+### 4.7 Auth
+
+- Single local account with Argon2id password hash using `argon2-browser`.
+- Login screen is a real username + password form.
+- If `better-sqlite3` cannot load in a given environment,
+  the app falls back to a username-only local gate so existing users are
+  not locked out.
+- No remote authentication, no JWT, no OAuth, no password reset.
+
+### 4.8 Tauri shell
+
+- `src-tauri/tauri.conf.json` sets the window to 1280x800 (was 800x600).
+- `capabilities/default.json` allows `core:default`.
+- No code signing, updater, store metadata, or remote build pipeline.
+
+### 4.9 Tests
+
+- Vitest 1 with jsdom and `@testing-library/react` 16.
+- One test file per store for the deterministic reducer logic.
+- Mocks `localStorage` and seeds the database in-memory (better-sqlite3
+  `:memory:`).
+
+### 4.10 Quality-of-life
+
+- Error boundary at `App.tsx` level.
+- `Toast` container with `role="status"` and `aria-live="polite"`.
+- `aria-label` on every icon-only button.
+
+## 5. In Progress (closing in this pass)
+
+- `curriculumStore.getCriticalPath` memoization: the memo object is reset on
+  every `updateNodeStatus` call.
+- `Roadmap.tsx` declared-but-not-defined state: `searchQuery` and
+  `expandedPhases` were used before any `useState`.
+- `DailyPlanner.tsx` use-before-define for revision state hooks.
+- `TopicDetails.handleDeleteResource` now removes the resource from the
+  store rather than only firing a toast.
+- Timer minutes roll into the linked node's `actualHours` when a timer is
+  stopped.
+- Settings theme toggle flips a real CSS variable override.
+- Settings import/export buttons are properly scoped.
+
+## 6. Future Enhancements (explicit non-goals)
+
+The following are intentionally not implemented:
+
+- Cloud sync, remote API, OAuth, JWT, multi-user.
+- OS-simulator kernel / scheduler / MM / FS modules.
+- FlexSearch global search index (CommandPalette does linear in-memory
+  search).
+- Playwright e2e.
+- Microsoft Store / Mac App Store submission, code signing, auto-update.
+- CI/CD, GitHub Actions, conventional-commit linter, automatic changelog
+  generation, bundle metadata.
+- Markdown rendering of node notes.
+
+## 7. Local persistence contract
+
+### 7.1 Storage location
+
+- **Tauri build**: `<AppDataDir>/quantos.db`.
+- **Web fallback (dev)**: `<cwd>/.quantos/quantos.db`.
+
+### 7.2 Hydration order on boot
+
+1. `services/db.ts` opens the connection and runs pending migrations.
+2. `repository.ts` reads each table into a plain JS object.
+3. Stores call `replaceAll(...)` on hydration; first launch seeds 73 nodes.
+4. Subsequent store mutations persist via `INSERT OR REPLACE` in a transaction.
+
+### 7.3 Backups
+
+- Settings -> Data Management -> Export Data writes a JSON document.
+- Import Data validates JSON, opens a transaction, wipes each table, and
+  re-inserts.
+
+## 8. Auth contract
+
+- First launch: "Create your local account" form sets username + password.
+- Password is Argon2id-hashed with the argon2-browser defaults.
+- Subsequent launches show the same form in "Sign in" mode; hash verified
+  via `argon2.verify`.
+- Wrong password surfaces a toast error and refuses to write to stores.
+
+## 9. Quality bar
+
+- TypeScript with `strict: true` and `noUnusedLocals/Parameters`.
+- Vitest unit suite green.
+- `npm run type-check`, `npm run lint`, `npm run test`, `npm run
+  build:frontend` succeed on Windows + macOS dev machines.
+- Every button on every page performs a real, observable action that
+  changes store state and persists.

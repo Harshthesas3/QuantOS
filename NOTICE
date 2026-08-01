@@ -1,0 +1,9 @@
+QuantOS
+Copyright © 2026 Harshith Krishna Sastry.
+
+This repository includes third-party open source dependencies that are governed by their own licenses.
+See package manifests, lockfiles, and dependency license notices for details.
+
+QuantOS is distributed under a dual-licensing model:
+- Community Edition for permitted non-commercial uses
+- Commercial Edition for commercial and organizational uses
